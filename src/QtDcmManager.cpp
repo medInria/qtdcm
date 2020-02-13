@@ -276,26 +276,26 @@ void QtDcmManager::findPatientsScu()
         d->mode = PACS;
 
         QtDcmFindScu * finder = new QtDcmFindScu ( this );
-        finder->findPatientsScu ( d->patientName, d->patientSex );
+        finder->findPatientsScu ( d->patientId, d->patientSex );
         delete finder;
     }
 }
 
-void QtDcmManager::findStudiesScu ( const QString &patientName )
+void QtDcmManager::findStudiesScu (const QString &patientId, const QString &patientName)
 {
     d->seriesToImport.clear();
 
     QtDcmFindScu * finder = new QtDcmFindScu ( this );
-    finder->findStudiesScu ( patientName, d->studyDescription, dateToString(d->date1), dateToString(d->date2) );
+    finder->findStudiesScu ( patientId, patientName, d->studyDescription, QString("*"), QString("*"));
     delete finder;
 }
 
-void QtDcmManager::findSeriesScu ( const QString &patientName, const QString &studyUid )
+void QtDcmManager::findSeriesScu (const QString &patientId, const QString &patientName, const QString &studyUid )
 {
     d->seriesToImport.clear();
 
     QtDcmFindScu * finder = new QtDcmFindScu ( this );
-    finder->findSeriesScu ( patientName, studyUid, d->studyDescription, d->serieDescription, d->modality );
+    finder->findSeriesScu (patientId, patientName, studyUid, d->studyDescription, d->serieDescription, d->modality );
     delete finder;
 }
 
@@ -435,6 +435,13 @@ void QtDcmManager::moveSelectedSeries()
         break;
     case PACS: 
     {
+        qWarning() << "****** Prepare move with parameters :";
+        qWarning() << "*    by default IMPORT";
+        qWarning() << "*    OutputDir = " << d->tempDir.absolutePath();
+        qWarning() << "*    SeriesUID = " << d->seriesToImport;
+        qWarning() << "*    ImportDir = " << d->outputDir;
+        qWarning() << "******";
+
         QtDcmMoveScu * mover = new QtDcmMoveScu ( this );
         mover->setOutputDir ( d->tempDir.absolutePath() );
         mover->setSeries ( d->seriesToImport );
@@ -508,6 +515,13 @@ void QtDcmManager::getPreviewFromSelectedSerie ( const QString &uid, int element
             makePreview ( filename );
         }
         else {
+            qWarning() << "****** Prepare move with parameters :";
+            qWarning() << "*    PREVIEW";
+            qWarning() << "*    PATH = " << d->tempDir.absolutePath();
+            qWarning() << "*    SeriesUID       = " << uid;
+            qWarning() << "*    ImageID         = " << imageId;
+            qWarning() << "******";
+
             QtDcmMoveScu * mover = new QtDcmMoveScu ( this );
             mover->setMode ( QtDcmMoveScu::PREVIEW );
             mover->setOutputDir ( d->tempDir.absolutePath() );

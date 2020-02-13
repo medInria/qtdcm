@@ -212,7 +212,7 @@ OFCondition QtDcmMoveScu::move ( const QString & uid )
     else {
         this->addOverrideKey ( QString ( "QueryRetrieveLevel=" ) + QString ( "" "IMAGE" "" ) );
         this->addOverrideKey ( QString ( "SOPInstanceUID=" + uid ) );
-        this->addOverrideKey (QString  ( "SeriesInstanceUID=*" ) );
+        this->addOverrideKey ( QString ( "SeriesInstanceUID=*" ) );
     }
 
     cond = ASC_initializeNetwork ( NET_ACCEPTORREQUESTOR, QtDcmPreferences::instance()->port().toInt(), d->acseTimeout, &d->net );
@@ -228,6 +228,8 @@ OFCondition QtDcmMoveScu::move ( const QString & uid )
         qDebug() << "Cannot create association: " << DimseCondition::dump ( temp_str, cond ).c_str();
         return cond;
     }
+
+    qDebug() << "Ready to listen PACS MOVE transmission for uid:" << uid;
 
     ASC_setAPTitles ( d->params, 
                       QtDcmPreferences::instance()->aetitle().toUtf8().data(), 
