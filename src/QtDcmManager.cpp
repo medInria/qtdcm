@@ -94,7 +94,7 @@ public:
     QString serieDescription;                        /** Attibute representing the serie description used for query PACS */
     QString studyDescription;                        /** Attibute representing the study description used for query PACS */
     QtDcmManager::eMoveMode mode;                    /** Mode that determine the type of media (MEDIA or PACS) */
-    QString dcm2nii;                                 /** Absolute filename of the dcm2nii program */
+    //QString dcm2nii;                                 /** Absolute filename of the dcm2nii program */
 
     QtDcmManager::eOutputdirMode outputdirMode;       /** Output directory mode DIALOG or CUSTOM */
     QtDcmServer currentPacs;                       /** Current pacs index in the pacs list */
@@ -362,7 +362,8 @@ void QtDcmManager::loadDicomdir()
 
     //Load dicomdir in a DCMTK DicomFileFormat object
     OFCondition status;
-    if ( ! ( status = d->dfile.loadFile ( d->dicomdir.toUtf8().data() ) ).good() ) {
+    OFFilename dcmFileName(d->dicomdir.toStdString(), OFTrue);
+    if ( ! ( status = d->dfile.loadFile (dcmFileName) ).good() ) {
         return;
     }
 
@@ -684,8 +685,9 @@ void QtDcmManager::makePreview ( const QString &filename )
 {
     DcmRLEDecoderRegistration::registerCodecs ( OFFalse, OFFalse );
     DJDecoderRegistration::registerCodecs ( EDC_photometricInterpretation, EUC_default, EPC_default, OFFalse );
+    OFFilename dcmFileName(filename.toStdString(), OFTrue);
     DcmFileFormat file;
-    file.loadFile ( filename.toLatin1().data() );
+    file.loadFile (dcmFileName);
     DcmDataset * dset = file.getDataset();
     DicomImage* dcimage = new DicomImage ( dset, file.getDataset()->getOriginalXfer(), CIF_MayDetachPixelData );
 
@@ -770,8 +772,8 @@ void QtDcmManager::setDicomdir ( const QString &dicomdir )
     d->dicomdir = dicomdir;
     //Load dicomdir in a DCMTK DicomFileFormat object
     OFCondition status;
-
-    if ( ! ( status = d->dfile.loadFile ( d->dicomdir.toUtf8().data() ) ).good() ) {
+    OFFilename dcmFileName(d->dicomdir.toStdString(), OFTrue);
+    if ( ! ( status = d->dfile.loadFile (dcmFileName) ).good() ) {
         return;
     }
 }
