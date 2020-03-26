@@ -751,7 +751,7 @@ void QtDcmMoveScu::storeSCPCallback ( void *callbackData, T_DIMSE_StoreProgress 
         *statusDetail = NULL;
         if ( ( imageDataSet != NULL ) && ( *imageDataSet != NULL ) && !self->d->bitPreserving && !self->d->ignore ) {
             /* create full path name for the output file */
-            OFFilename dcmFileName(nullptr, OFTrue);
+            OFFilename dcmFileName;
             OFFilename dcmOutputDirectory(self->d->outputDirectory, OFTrue);
             OFFilename dcmImageFile(self->d->imageFile, OFTrue);
             OFStandard::combineDirAndFilename (dcmFileName, dcmOutputDirectory, dcmImageFile, OFTrue /* allowEmptyDirName */ );
