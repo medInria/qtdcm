@@ -1,15 +1,34 @@
 message("${Esc}[32mConfiguring ITK external library${Esc}[m")
 
+## #############################################################################
+## Look for Git
+## #############################################################################
+find_program(GIT_BIN NAMES git)
+if (NOT GIT_BIN)
+  find_package(Git)
+  if(Git_FOUND)
+    set(GIT_BIN ${GIT_EXECUTABLE})
+  else()
+    message(SEND_ERROR  "You need to install Git and add it to the PATH environment variable.")  
+  endif()
+else()
+  mark_as_advanced(GIT_BIN)
+endif()
+
 if("${ITK_DIR}" STREQUAL "")
   set(ITK_DIR ${PROJECT_BINARY_DIR}/externals/itk-build)
 endif()
-  
+
 set(ITK_DIR "${ITK_DIR}" CACHE PATH "" FORCE)
+
+set(git_url https://github.com/InsightSoftwareConsortium/ITK.git)
+set(git_tag v5.0.0)
 
 ExternalProject_Add(
   itk
  
-  URL https://sourceforge.net/projects/itk/files/itk/4.13/InsightToolkit-4.13.0.tar.gz
+  GIT_REPOSITORY ${git_url}
+  GIT_TAG ${git_tag}
 
   CMAKE_GENERATOR Ninja
   
