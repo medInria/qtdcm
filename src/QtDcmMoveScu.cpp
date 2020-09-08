@@ -171,7 +171,7 @@ void QtDcmMoveScu::run()
             QDir ( d->outputDir ).mkdir ( d->series.at ( i ) );
         }
 
-        d->outputDirectory = QString ( d->outputDir + QDir::separator() + d->currentSerie ).toUtf8().constData();
+        d->outputDirectory = QString ( d->outputDir + QDir::separator() + d->currentSerie ).toUtf8().constData(); //OK because this std::string contain utf8 and will be wrap into OFFilename with utf16 conversion if needed at line 755
 
         if ( d->mode == IMPORT ) {
             cond = this->move ( d->series.at ( i ) );
@@ -212,7 +212,7 @@ OFCondition QtDcmMoveScu::move ( const QString & uid )
     else {
         this->addOverrideKey ( QString ( "QueryRetrieveLevel=" ) + QString ( "" "IMAGE" "" ) );
         this->addOverrideKey ( QString ( "SOPInstanceUID=" + uid ) );
-        this->addOverrideKey (QString  ( "SeriesInstanceUID=*" ) );
+        this->addOverrideKey ( QString ( "SeriesInstanceUID=*" ) );
     }
 
     cond = ASC_initializeNetwork ( NET_ACCEPTORREQUESTOR, QtDcmPreferences::instance()->port().toInt(), d->acseTimeout, &d->net );
@@ -228,6 +228,8 @@ OFCondition QtDcmMoveScu::move ( const QString & uid )
         qDebug() << "Cannot create association: " << DimseCondition::dump ( temp_str, cond ).c_str();
         return cond;
     }
+
+    qDebug() << "Ready to listen PACS MOVE transmission for uid:" << uid;
 
     ASC_setAPTitles ( d->params, 
                       QtDcmPreferences::instance()->aetitle().toUtf8().data(), 
@@ -698,22 +700,13 @@ OFCondition QtDcmMoveScu::storeSCP ( T_ASC_Association *assoc, T_DIMSE_Message *
 
     OFCondition cond = EC_Normal;
     T_DIMSE_C_StoreRQ *req;
-    char imageFile[2048];
+    char imageFile[4096];
 
     req = &msg->msg.CStoreRQ;
 
-    if ( OFFalse ) {
-#ifdef _WIN32
-        tmpnam ( imageFile );
-#else
-        strcpy ( imageFile, NULL_DEVICE_NAME );
-#endif
-    }
-    else {
-        sprintf ( imageFile, "%s.%s",
-                  dcmSOPClassUIDToModality ( req->AffectedSOPClassUID ),
-                  req->AffectedSOPInstanceUID );
-    }
+    sprintf ( imageFile, "%s.%s",
+                dcmSOPClassUIDToModality ( req->AffectedSOPClassUID ),
+                req->AffectedSOPInstanceUID );
 
     self->d->assoc = assoc;
 
@@ -758,19 +751,21 @@ void QtDcmMoveScu::storeSCPCallback ( void *callbackData, T_DIMSE_StoreProgress 
         *statusDetail = NULL;
         if ( ( imageDataSet != NULL ) && ( *imageDataSet != NULL ) && !self->d->bitPreserving && !self->d->ignore ) {
             /* create full path name for the output file */
-            OFString ofname;
-            OFStandard::combineDirAndFilename ( ofname, self->d->outputDirectory, self->d->imageFile, OFTrue /* allowEmptyDirName */ );
+            OFFilename dcmFileName;
+            OFFilename dcmOutputDirectory(self->d->outputDirectory, OFTrue);
+            OFFilename dcmImageFile(self->d->imageFile, OFTrue);
+            OFStandard::combineDirAndFilename (dcmFileName, dcmOutputDirectory, dcmImageFile, OFTrue /* allowEmptyDirName */ );
 
             E_TransferSyntax xfer = self->d->writeTransferSyntax;
 
             if ( xfer == EXS_Unknown ) xfer = ( *imageDataSet )->getOriginalXfer();
 
-            OFCondition cond = self->d->file->saveFile ( ofname.c_str(), xfer, self->d->sequenceType, self->d->groupLength,
+            OFCondition cond = self->d->file->saveFile (dcmFileName, xfer, self->d->sequenceType, self->d->groupLength,
                                self->d->paddingType, OFstatic_cast ( Uint32, self->d->filepad ), OFstatic_cast ( Uint32, self->d->itempad ),
                                ( self->d->useMetaheader ) ? EWM_fileformat : EWM_dataset );
 
-            if ( QFile ( ofname.c_str() ).exists() ) {
-                emit self->previewSlice ( QString ( ofname.c_str() ) );
+            if ( QFile (dcmFileName.getCharPointer()).exists() ) {
+                emit self->previewSlice ( QString (dcmFileName.getCharPointer()) );
             }
 
             if ( ( rsp->DimseStatus == STATUS_Success ) && !self->d->ignore ) {
@@ -939,7 +934,8 @@ OFCondition QtDcmMoveScu::moveSCU ( T_ASC_Association * assoc, const char *fname
 
     DcmFileFormat file;
     if ( fname != NULL ) {
-        if ( file.loadFile ( fname ).bad() ) {
+        OFFilename dcmFileName(fname, OFTrue);
+        if ( file.loadFile (dcmFileName).bad() ) {
             qDebug() << "bad DICOM file: " << QString ( fname );
             return DIMSE_BADDATA;
         }

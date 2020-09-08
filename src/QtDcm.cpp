@@ -179,7 +179,7 @@ void QtDcm::onPatientItemSelected ( QTreeWidgetItem* current, QTreeWidgetItem* p
     treeWidgetStudies->clear();
 
     if ( d->mode == QtDcm::PACS_MODE ) {
-        QtDcmManager::instance()->findStudiesScu ( current->text ( 0 ) );
+        QtDcmManager::instance()->findStudiesScu (current->text(1), current->text ( 0 ) );
     }
     else {
         QtDcmManager::instance()->findStudiesDicomdir ( current->text ( 0 ) );
@@ -200,7 +200,7 @@ void QtDcm::onStudyItemSelected ( QTreeWidgetItem* current, QTreeWidgetItem* pre
     QtDcmManager::instance()->clearPreview();
 
     if ( d->mode == QtDcm::PACS_MODE ) {
-        QtDcmManager::instance()->findSeriesScu ( treeWidgetPatients->currentItem()->text ( 0 ), current->data ( 2, 0 ).toString() );
+        QtDcmManager::instance()->findSeriesScu (treeWidgetPatients->currentItem()->text(1), treeWidgetPatients->currentItem()->text(0), current->data ( 2, 0 ).toString() );
     }
     else {
         QtDcmManager::instance()->findSeriesDicomdir ( treeWidgetPatients->currentItem()->text ( 0 ), current->data ( 2, 0 ).toString() );
@@ -285,7 +285,7 @@ void QtDcm::onCurrentModalityChanged ( int index )
 
     if ( treeWidgetPatients->currentItem() && treeWidgetStudies->currentItem() ) {
         if ( d->mode == QtDcm::PACS_MODE ) {
-            QtDcmManager::instance()->findSeriesScu ( treeWidgetPatients->currentItem()->text ( 0 ), treeWidgetStudies->currentItem()->data ( 2, 0 ).toString() );
+            QtDcmManager::instance()->findSeriesScu (treeWidgetPatients->currentItem()->text(1), treeWidgetPatients->currentItem()->text ( 0 ), treeWidgetStudies->currentItem()->data ( 2, 0 ).toString() );
         }
         else {
             QtDcmManager::instance()->findSeriesDicomdir ( treeWidgetPatients->currentItem()->text ( 0 ), treeWidgetStudies->currentItem()->data ( 2, 0 ).toString() );
@@ -338,7 +338,7 @@ void QtDcm::onStartDateChanged(const QDate &startdate)
 
     if ( treeWidgetPatients->currentItem() ) {
         if ( d->mode == QtDcm::PACS_MODE ) {
-            QtDcmManager::instance()->findStudiesScu ( treeWidgetPatients->currentItem()->text ( 0 ) );
+            QtDcmManager::instance()->findStudiesScu ( treeWidgetPatients->currentItem()->text(1), treeWidgetPatients->currentItem()->text ( 0 ) );
         }
         else {
             qDebug() << "Date filtering not available in CD-Rom mode";
@@ -361,7 +361,7 @@ void QtDcm::onEndDateChanged (const QDate &enddate)
 
     if ( treeWidgetPatients->currentItem() ) {
         if ( d->mode == QtDcm::PACS_MODE ) {
-            QtDcmManager::instance()->findStudiesScu ( treeWidgetPatients->currentItem()->text ( 0 ) );
+            QtDcmManager::instance()->findStudiesScu (treeWidgetPatients->currentItem()->text(1), treeWidgetPatients->currentItem()->text ( 0 ) );
         }
         else {
             qDebug() << "Date filtering not available in CD-Rom mode";
@@ -435,7 +435,7 @@ void QtDcm::onStudyDescriptionTextChanged (const QString &description)
     }
     
     if ( treeWidgetPatients->currentItem() && d->mode == QtDcm::PACS_MODE ) {
-        QtDcmManager::instance()->findStudiesScu ( treeWidgetPatients->currentItem()->text ( 0 ) );
+        QtDcmManager::instance()->findStudiesScu (treeWidgetPatients->currentItem()->text(1), treeWidgetPatients->currentItem()->text ( 0 ) );
     }
 }
 
@@ -453,6 +453,6 @@ void QtDcm::onSerieDescriptionTextChanged (const QString &description)
     }
 
     if ( treeWidgetPatients->currentItem() && treeWidgetStudies->currentItem() && d->mode == QtDcm::PACS_MODE) {
-        QtDcmManager::instance()->findSeriesScu ( treeWidgetPatients->currentItem()->text ( 0 ), treeWidgetStudies->currentItem()->data ( 2, 0 ).toString() );
+        QtDcmManager::instance()->findSeriesScu (treeWidgetPatients->currentItem()->text(1), treeWidgetPatients->currentItem()->text(0), treeWidgetStudies->currentItem()->data ( 2, 0 ).toString() );
     }
 }

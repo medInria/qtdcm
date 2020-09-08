@@ -56,19 +56,19 @@ QtDcmFindScu::~QtDcmFindScu()
 }
 
 
-void QtDcmFindScu::findPatientsScu (const QString &patientName)
+void QtDcmFindScu::findPatientsScu (const QString &patientId)
 {
-    this->findPatientsScu ( patientName, "*" );
+    this->findPatientsScu ( patientId, "*" );
 }
 
-void QtDcmFindScu::findPatientsScu (const QString &patientName, const QString &patientSex)
+void QtDcmFindScu::findPatientsScu (const QString &patientId, const QString &patientSex)
 {
     OFList<OFString> overrideKeys;
     overrideKeys.push_back ( ( QString ( "QueryRetrieveLevel=" ) + QString ( "" "PATIENT" "" ) ).toUtf8().data() );
-    overrideKeys.push_back ( ( QString ( "PatientName=" ) + patientName ).toUtf8().data() );
 
-    //Patient leqvel
-    overrideKeys.push_back ( QString ( "PatientID" ).toUtf8().data() );
+    //Patient level
+    overrideKeys.push_back ( ( QString ( "PatientID=" ) + patientId).toUtf8().data());
+    overrideKeys.push_back ( QString ( "PatientName").toUtf8().data());
     overrideKeys.push_back ( QString ( "PatientSex=" + patientSex ).toUtf8().data() );
     overrideKeys.push_back ( QString ( "PatientBirthDate" ).toUtf8().data() );
 
@@ -78,26 +78,26 @@ void QtDcmFindScu::findPatientsScu (const QString &patientName, const QString &p
 
 void QtDcmFindScu::findStudiesScu (const QString &patientName)
 {
-    this->findStudiesScu ( patientName, "*", QDate ( 1900,01,01 ).toString ( "yyyyMMdd" ),QDate::currentDate().toString ( "yyyyMMdd" ) );
+    this->findStudiesScu ( QString("*"), patientName, "*", QDate ( 1900,01,01 ).toString ( "yyyyMMdd" ),QDate::currentDate().toString ( "yyyyMMdd" ) );
 }
 
 void QtDcmFindScu::findStudiesScu(const QString &patientName, const QString &studyDescription)
 {
-    this->findStudiesScu ( patientName, studyDescription, QDate ( 1900,01,01 ).toString ( "yyyyMMdd" ),QDate::currentDate().toString ( "yyyyMMdd" ) );
+    this->findStudiesScu ( QString("*"), patientName, studyDescription, QDate ( 1900,01,01 ).toString ( "yyyyMMdd" ),QDate::currentDate().toString ( "yyyyMMdd" ) );
 }
 
-void QtDcmFindScu::findStudiesScu (const QString &patientName, const QString &studyDescription, const QString &startDate, const QString &endDate)
+void QtDcmFindScu::findStudiesScu (const QString & patientId, const QString &patientName, const QString &studyDescription, const QString &startDate, const QString &endDate)
 {
     OFList<OFString> overrideKeys;
     overrideKeys.push_back ( ( QString ( "QueryRetrieveLevel=" ) + QString ( "" "STUDY" "" ) ).toUtf8().data() );
+    overrideKeys.push_back ( ( QString ( "PatientID=" ) + patientId).toUtf8().data() );
     overrideKeys.push_back ( ( QString ( "PatientName=" ) + patientName ).toUtf8().data() );
     overrideKeys.push_back ( ( QString ( "StudyDescription=" ) + studyDescription ).toUtf8().data() );
     overrideKeys.push_back ( QString ( "StudyDate=" + startDate + "-" + endDate ).toUtf8().data() );
-    overrideKeys.push_back(QString("StudyID").toUtf8().data());
-    overrideKeys.push_back(QString("AccessionNumber").toUtf8().data());
-    overrideKeys.push_back(QString("NumberOfStudyRelatedSeries").toUtf8().data());
-    overrideKeys.push_back(QString("NumberOfStudyRelatedInstances").toUtf8().data());
-    overrideKeys.push_back(QString("PatientID=*").toUtf8().data());
+    overrideKeys.push_back ( QString ( "StudyID").toUtf8().data());
+    overrideKeys.push_back ( QString ( "AccessionNumber").toUtf8().data());
+    overrideKeys.push_back ( QString ( "NumberOfStudyRelatedSeries").toUtf8().data());
+    overrideKeys.push_back ( QString ( "NumberOfStudyRelatedInstances").toUtf8().data());
 
     //Study level
     overrideKeys.push_back ( QString ( "StudyInstanceUID" ).toUtf8().data() );
@@ -106,17 +106,17 @@ void QtDcmFindScu::findStudiesScu (const QString &patientName, const QString &st
 
 }
 
-void QtDcmFindScu::findSeriesScu (const QString &patientName, const QString &studyUID)
+void QtDcmFindScu::findSeriesScu (const QString & patientId, const QString &patientName, const QString &studyUID)
 {
-    this->findSeriesScu ( patientName, studyUID, "*", "*", "*" );
+    this->findSeriesScu (patientId, patientName, studyUID, "*", "*", "*" );
 }
 
-void QtDcmFindScu::findSeriesScu (const QString &patientName, const QString &studyUID, const QString &studyDescription, const QString &modality)
+void QtDcmFindScu::findSeriesScu (const QString &patientId, const QString &patientName, const QString &studyUID, const QString &studyDescription, const QString &modality)
 {
-    this->findSeriesScu ( patientName, studyUID, studyDescription, "*", modality );
+    this->findSeriesScu (patientId, patientName, studyUID, studyDescription, "*", modality );
 }
 
-void QtDcmFindScu::findSeriesScu (const QString &patientName, const QString &studyUID, const QString &studyDescription, const QString &serieDescription, const QString &modality)
+void QtDcmFindScu::findSeriesScu (const QString &patientId, const QString &patientName, const QString &studyUID, const QString &studyDescription, const QString &serieDescription, const QString &modality)
 {
     OFList<OFString> overrideKeys;
     overrideKeys.push_back ( ( QString ( "QueryRetrieveLevel=" ) + QString ( "" "SERIES" "" ) ).toUtf8().data() );
@@ -125,7 +125,7 @@ void QtDcmFindScu::findSeriesScu (const QString &patientName, const QString &stu
     overrideKeys.push_back ( QString ( "StudyDescription=" + studyDescription ).toUtf8().data() );
     overrideKeys.push_back ( ( QString ( "SeriesDescription=" ) + serieDescription ).toUtf8().data() );
     overrideKeys.push_back ( QString ( "Modality=" + modality ).toUtf8().data() );
-    overrideKeys.push_back ( QString("PatientID=*").toUtf8().data());
+    overrideKeys.push_back ( (QString("PatientID=") + patientId).toUtf8().data());
 
     //Study level
     overrideKeys.push_back ( QString ( "StudyDate" ).toUtf8().data() );
