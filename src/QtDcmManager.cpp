@@ -286,7 +286,7 @@ void QtDcmManager::findStudiesScu (const QString &patientId, const QString &pati
     d->seriesToImport.clear();
 
     QtDcmFindScu * finder = new QtDcmFindScu ( this );
-    finder->findStudiesScu ( patientId, patientName, d->studyDescription, QString("*"), QString("*"));
+    finder->findStudiesScu ( patientId, patientName, d->studyDescription, startDate().toString(Qt::ISODate).replace("-",""),endDate().toString(Qt::ISODate).replace("-",""));
     delete finder;
 }
 
