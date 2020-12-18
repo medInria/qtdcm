@@ -113,7 +113,8 @@ QtDcmMoveScu::QtDcmMoveScu ( QObject * parent )
     d->queryModel = QMPatientRoot;
     d->ignorePendingDatasets = OFTrue;
     d->outputDirectory = ".";
-    d->acseTimeout = 30;
+    d->acseTimeout = 60;
+    d->dimseTimeout = 60;
     d->blockMode = DIMSE_BLOCKING;
 
     d->mode = QtDcmMoveScu::IMPORT;
@@ -202,8 +203,6 @@ OFCondition QtDcmMoveScu::move ( const QString & uid )
     };
 
     OFCondition cond;
-    this->addOverrideKey(QString("PatientID=*"));
-    this->addOverrideKey(QString("StudyInstanceUID=*"));
 
     if ( d->mode == IMPORT ) {
         this->addOverrideKey ( QString ( "QueryRetrieveLevel=" ) + QString ( "" "SERIES" "" ) );
