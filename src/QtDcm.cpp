@@ -175,15 +175,15 @@ void QtDcm::onPatientItemClicked ( QTreeWidgetItem * item, int column )
     QtDcmManager::instance()->clearPreview();
     treeWidgetStudies->clear();
     treeWidgetSeries->clear();
+    QtDcmManager::instance()->clearDataToImport();
 
     if ( d->mode == QtDcm::PACS_MODE )
     {
         for (QTreeWidgetItem *ptItem : treeWidgetPatients->selectedItems())
         {
             QtDcmManager::instance()->findStudiesScu (ptItem->text(1), ptItem->text ( 0 ) );
+            QtDcmManager::instance()->addDataToImport(ptItem->text(1), "PATIENT");
         }
-
-        findSeriesFromStudyRows();
     }
     else
     {
@@ -202,6 +202,7 @@ void QtDcm::onStudyItemClicked(QTreeWidgetItem * item, int column )
 
     QtDcmManager::instance()->clearSerieInfo();
     QtDcmManager::instance()->clearPreview();
+    QtDcmManager::instance()->clearDataToImport();
     
     treeWidgetSeries->clear();
 
@@ -210,6 +211,7 @@ void QtDcm::onStudyItemClicked(QTreeWidgetItem * item, int column )
         for (QTreeWidgetItem *stItem: treeWidgetStudies->selectedItems())
         {
             QtDcmManager::instance()->findSeriesScu ( stItem->data ( 1, 0 ).toString() );
+            QtDcmManager::instance()->addDataToImport(stItem->data ( 1, 0 ).toString(), "STUDY");
         }
     }
     else
@@ -227,6 +229,7 @@ void QtDcm::onSerieItemClicked ( QTreeWidgetItem * item, int column )
     }
 
     QtDcmManager::instance()->clearListOfImages();
+    QtDcmManager::instance()->clearDataToImport();
 
     if ( d->mode == QtDcm::CD_MODE )
         QtDcmManager::instance()->findImagesDicomdir ( item->text ( 2 ) );
@@ -237,6 +240,7 @@ void QtDcm::onSerieItemClicked ( QTreeWidgetItem * item, int column )
         {
             QtDcmManager::instance()->findImagesScu ( current->text ( 2 ) );
             elementCount = QtDcmManager::instance()->listOfImages().size();
+            QtDcmManager::instance()->addDataToImport ( current->text ( 2 ), "SERIES" );
         }
         QString institution = item->data ( 5, 0 ).toString();
         QString opName = item->data ( 6, 0 ).toString();
@@ -244,19 +248,6 @@ void QtDcm::onSerieItemClicked ( QTreeWidgetItem * item, int column )
         QtDcmManager::instance()->getPreviewFromSelectedSerie ( item->text ( 3 ), elementCount / 2 );
     }
 
-    for ( int row=0; row<treeWidgetSeries->topLevelItemCount(); row++)
-    {
-        QTreeWidgetItem *seItem = treeWidgetSeries->topLevelItem(row);
-        if (seItem->isSelected())
-        {
-            QtDcmManager::instance()->addSerieToImport ( seItem->text ( 2 ) );
-        }
-        else
-        {
-            qDebug()<<"series unselected "<<seItem->text(0);
-            QtDcmManager::instance()->removeSerieToImport ( seItem->text ( 2 ) );
-        }
-    }
 }
 
 void QtDcm::onDicomMediaButtonClicked()

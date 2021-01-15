@@ -261,13 +261,13 @@ public:
      */
     QDate endDate() const;
 
-    void addSerieToImport ( const QString &uid );
+    void addDataToImport ( const QString &uid, const QString &level = "" );
 
-    void removeSerieToImport ( const QString &uid );
+    void removeDataToImport ( const QString &uid, const QString &level = "" );
 
-    void clearSeriesToImport();
+    void clearDataToImport();
 
-    int seriesToImportSize();
+    int dataToImportSize();
 
     /**
      * add patient in the list

@@ -82,7 +82,7 @@ public:
     QStringList images;                           /** List of image filename to export from a CD */
     QStringList listImages;                       /** List of images uid in the current selected serie */
     QMap<int, QString> mapImages;                    /** Map of images (corresponding to listImages) with InstanceNumber tags used as keys */
-    QStringList seriesToImport;                   /** Selected series list in the treview */
+    QStringList dataToImport;                   /** Selected data list in the treview */
     QString serieId;                                 /** Current selected serie UID */
     QString patientName;                             /** Attribute frepresenting the patient name used to query PACS */
     QString patientId;                               /** Attribute representing the patient id used to query PACS */
@@ -95,6 +95,7 @@ public:
     QString studyDescription;                        /** Attibute representing the study description used for query PACS */
     QtDcmManager::eMoveMode mode;                    /** Mode that determine the type of media (MEDIA or PACS) */
     //QString dcm2nii;                                 /** Absolute filename of the dcm2nii program */
+    QString queryLevel;
 
     QtDcmManager::eOutputdirMode outputdirMode;       /** Output directory mode DIALOG or CUSTOM */
     QtDcmServer currentPacs;                       /** Current pacs index in the pacs list */
@@ -149,6 +150,7 @@ QtDcmManager::QtDcmManager(QObject *parent)
     d->serieDescription = "";
     d->studyDescription = "";
     d->patientSex = "*";
+    d->queryLevel = "undefined";
 
     d->mainWidget = NULL;
     d->patientsTreeWidget = NULL;
@@ -272,7 +274,7 @@ void QtDcmManager::displayMessage ( const QString &info )
 void QtDcmManager::findPatientsScu()
 {
     if ( d->mainWidget->pacsComboBox->count() ) {
-        d->seriesToImport.clear();
+        d->dataToImport.clear();
         d->mode = PACS;
 
         QtDcmFindScu * finder = new QtDcmFindScu ( this );
@@ -283,7 +285,7 @@ void QtDcmManager::findPatientsScu()
 
 void QtDcmManager::findStudiesScu (const QString &patientId, const QString &patientName)
 {
-    d->seriesToImport.clear();
+    d->dataToImport.clear();
 
     QtDcmFindScu * finder = new QtDcmFindScu ( this );
     finder->findStudiesScu ( patientId, patientName, d->studyDescription, d->startDate.toString( "yyyyMMdd" ), d->endDate.toString( "yyyyMMdd" ));
@@ -292,7 +294,7 @@ void QtDcmManager::findStudiesScu (const QString &patientId, const QString &pati
 
 void QtDcmManager::findSeriesScu ( const QString &studyUid )
 {
-    d->seriesToImport.clear();
+    d->dataToImport.clear();
 
     QtDcmFindScu * finder = new QtDcmFindScu ( this );
     finder->findSeriesScu (studyUid, d->studyDescription, d->serieDescription, d->modality );
@@ -373,7 +375,7 @@ void QtDcmManager::loadDicomdir()
 
 void QtDcmManager::findPatientsDicomdir()
 {
-    d->seriesToImport.clear();
+    d->dataToImport.clear();
     QtDcmFindDicomdir * finder = new QtDcmFindDicomdir ( this );
     finder->setDcmItem ( d->dfile.getDataset() );
     finder->findPatients();
@@ -382,7 +384,7 @@ void QtDcmManager::findPatientsDicomdir()
 
 void QtDcmManager::findStudiesDicomdir ( const QString &patientName )
 {
-    d->seriesToImport.clear();
+    d->dataToImport.clear();
     QtDcmFindDicomdir * finder = new QtDcmFindDicomdir ( this );
     finder->setDcmItem ( d->dfile.getDataset() );
     finder->findStudies ( patientName );
@@ -392,7 +394,7 @@ void QtDcmManager::findStudiesDicomdir ( const QString &patientName )
 void QtDcmManager::findSeriesDicomdir ( const QString &patientName, 
                                         const QString &studyUID )
 {
-    d->seriesToImport.clear();
+    d->dataToImport.clear();
     QtDcmFindDicomdir * finder = new QtDcmFindDicomdir ( this );
     finder->setDcmItem ( d->dfile.getDataset() );
     finder->findSeries ( patientName, studyUID );
@@ -423,7 +425,7 @@ void QtDcmManager::moveSelectedSeries()
         mover->setDcmItem ( d->dfile.getDataset() );
         mover->setOutputDir ( d->tempDir.absolutePath() );
         mover->setImportDir ( d->outputDir );
-        mover->setSeries ( d->seriesToImport );
+        mover->setSeries ( d->dataToImport );
         connect ( mover, &QtDcmMoveDicomdir::updateProgress,
                   this,  &QtDcmManager::updateProgressBar);
         connect ( mover, &QtDcmMoveDicomdir::serieMoved,
@@ -440,14 +442,15 @@ void QtDcmManager::moveSelectedSeries()
         qWarning() << "****** Prepare move with parameters :";
         qWarning() << "*    by default IMPORT";
         qWarning() << "*    OutputDir = " << d->tempDir.absolutePath();
-        qWarning() << "*    SeriesUID = " << d->seriesToImport;
+        qWarning() << "*    DataUID = " << d->dataToImport;
         qWarning() << "*    ImportDir = " << d->outputDir;
         qWarning() << "******";
 
         QtDcmMoveScu * mover = new QtDcmMoveScu ( this );
         mover->setOutputDir ( d->tempDir.absolutePath() );
-        mover->setSeries ( d->seriesToImport );
+        mover->setData ( d->dataToImport );
         mover->setImportDir ( d->outputDir );
+        mover->setQueryLevel( d->queryLevel );
         connect ( mover, &QtDcmMoveScu::updateProgress,
                   this,  &QtDcmManager::updateProgressBar);
         connect ( mover, &QtDcmMoveScu::serieMoved,
@@ -527,7 +530,7 @@ void QtDcmManager::getPreviewFromSelectedSerie ( const QString &uid, int element
             QtDcmMoveScu * mover = new QtDcmMoveScu ( this );
             mover->setMode ( QtDcmMoveScu::PREVIEW );
             mover->setOutputDir ( d->tempDir.absolutePath() );
-            mover->setSeries ( QStringList() << uid );
+            mover->setData ( QStringList() << uid );
             mover->setImageId ( imageId );
             connect(mover, &QtDcmMoveScu::previewSlice,
                     this,  &QtDcmManager::makePreview);
@@ -549,7 +552,7 @@ void QtDcmManager::getPreviewFromSelectedSerie ( const QString &uid, int element
 void QtDcmManager::importSelectedSeries()
 {
     if ( this->useExternalConverter() ) { //Use QtDcm convertion tool (ITK or dcm2nii)
-        if ( this->seriesToImportSize() != 0 ) {
+        if ( this->dataToImportSize() != 0 ) {
             if ( this->getOutputdirMode() == QtDcmManager::DIALOG ) {
                 QFileDialog dialog( d->mainWidget );
                 dialog.setFileMode ( QFileDialog::Directory );
@@ -587,7 +590,7 @@ void QtDcmManager::importSelectedSeries()
 
 void QtDcmManager::importToDirectory ( const QString &directory )
 {
-    if ( this->seriesToImportSize() != 0 ) {
+    if ( this->dataToImportSize() != 0 ) {
         this->setOutputDirectory ( directory );
         this->moveSelectedSeries();
     }
@@ -607,12 +610,12 @@ void QtDcmManager::onSerieMoved ( const QString &directory , const QString &seri
         converter.convert();
         qDebug() << "Conversion complete";
         
-        if ( number == this->seriesToImportSize() - 1 ) {
+        if ( number == this->dataToImportSize() - 1 ) {
             emit importFinished(directory);
         }
     }
 
-    if ( number == this->seriesToImportSize() - 1 )
+    if ( number == this->dataToImportSize() - 1 )
         emit importFinished(directory);
 }
 
@@ -942,27 +945,37 @@ QString QtDcmManager::currentSeriesDirectory() const
     return d->currentSerieDir.absolutePath();
 }
 
-void QtDcmManager::addSerieToImport ( const QString &uid )
+void QtDcmManager::addDataToImport ( const QString &uid, const QString & level )
 {
-    if ( !d->seriesToImport.contains ( uid ) ) {
-        d->seriesToImport.append ( uid );
+    d->dataToImport.clear();
+    d->queryLevel = level;
+    if ( !d->dataToImport.contains ( uid ) ) {
+        d->dataToImport.append ( uid );
     }
+    qDebug()<<"data to import "<<d->dataToImport;
 }
 
-void QtDcmManager::removeSerieToImport ( const QString &uid )
+void QtDcmManager::removeDataToImport ( const QString &uid,  const QString & level )
 {
-    if ( d->seriesToImport.contains ( uid ) )
-        d->seriesToImport.removeOne ( uid );
+    if ( d->queryLevel != level )
+    {
+        d->dataToImport.clear();
+        return;
+    }
+
+    if ( d->dataToImport.contains ( uid ) )
+        d->dataToImport.removeOne ( uid );
 }
 
-void QtDcmManager::clearSeriesToImport()
+void QtDcmManager::clearDataToImport()
 {
-    d->seriesToImport.clear();
+    d->queryLevel = "undefined";
+    d->dataToImport.clear();
 }
 
-int QtDcmManager::seriesToImportSize()
+int QtDcmManager::dataToImportSize()
 {
-    return d->seriesToImport.size();
+    return d->dataToImport.size();
 }
 
 bool QtDcmManager::useExternalConverter() const
