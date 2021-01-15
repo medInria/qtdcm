@@ -69,7 +69,7 @@ public:
      */
     void findPatientsScu();
     void findStudiesScu ( const QString &patientId,  const QString &patientName );
-    void findSeriesScu (const QString &patientId, const QString &patientName, const QString &studyUID );
+    void findSeriesScu ( const QString &studyUID );
     void findImagesScu ( const QString &uid );
     void foundPatient ( const QMap<QString, QString> &infosMap );
     void foundStudy ( const QMap<QString, QString> &infosMap );

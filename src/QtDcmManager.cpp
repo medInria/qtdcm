@@ -89,8 +89,8 @@ public:
     QString patientSex;                              /** Attribute representing the patient sex used to query PACS */
     QString patientBirthDate;                        /** Attribute representing the patient birthdate used to query PACS */
     QString modality;                                /** Attibute for the modality of the search (MR, US, CT, etc) */
-    QDate date1;                                   /** Attribute for the begin date of the query (usefull for date based queries) */
-    QDate date2;                                   /** Attribute for the end date of the query (usefull for date based queries) */
+    QDate startDate;                                   /** Attribute for the begin date of the query (usefull for date based queries) */
+    QDate endDate;                                   /** Attribute for the end date of the query (usefull for date based queries) */
     QString serieDescription;                        /** Attibute representing the serie description used for query PACS */
     QString studyDescription;                        /** Attibute representing the study description used for query PACS */
     QtDcmManager::eMoveMode mode;                    /** Mode that determine the type of media (MEDIA or PACS) */
@@ -142,12 +142,12 @@ QtDcmManager::QtDcmManager(QObject *parent)
 
     d->outputdirMode = DIALOG;
 
-    d->patientName = "*";
+    d->patientName = "";
     d->patientId = "*";
     d->patientBirthDate = "";
-    d->modality = "*";
-    d->serieDescription = "*";
-    d->studyDescription = "*";
+    d->modality = "";
+    d->serieDescription = "";
+    d->studyDescription = "";
     d->patientSex = "*";
 
     d->mainWidget = NULL;
@@ -276,7 +276,7 @@ void QtDcmManager::findPatientsScu()
         d->mode = PACS;
 
         QtDcmFindScu * finder = new QtDcmFindScu ( this );
-        finder->findPatientsScu ( d->patientId, d->patientSex );
+        finder->findPatientsScu ( d->patientId, d->patientSex, d->patientName );
         delete finder;
     }
 }
@@ -286,16 +286,16 @@ void QtDcmManager::findStudiesScu (const QString &patientId, const QString &pati
     d->seriesToImport.clear();
 
     QtDcmFindScu * finder = new QtDcmFindScu ( this );
-    finder->findStudiesScu ( patientId, patientName, d->studyDescription, QString("*"), QString("*"));
+    finder->findStudiesScu ( patientId, patientName, d->studyDescription, d->startDate.toString( "yyyyMMdd" ), d->endDate.toString( "yyyyMMdd" ));
     delete finder;
 }
 
-void QtDcmManager::findSeriesScu (const QString &patientId, const QString &patientName, const QString &studyUid )
+void QtDcmManager::findSeriesScu ( const QString &studyUid )
 {
     d->seriesToImport.clear();
 
     QtDcmFindScu * finder = new QtDcmFindScu ( this );
-    finder->findSeriesScu (patientId, patientName, studyUid, d->studyDescription, d->serieDescription, d->modality );
+    finder->findSeriesScu (studyUid, d->studyDescription, d->serieDescription, d->modality );
     delete finder;
 }
 
@@ -319,28 +319,29 @@ void QtDcmManager::foundPatient ( const QMap<QString, QString> &infosMap )
 
 void QtDcmManager::foundStudy ( const QMap<QString, QString> &infosMap )
 {
+    QDate examDate = QDate::fromString ( infosMap["Date"], "yyyyMMdd" );
     if ( !d->studiesTreeWidget.isNull() ) {
         QTreeWidgetItem * studyItem = new QTreeWidgetItem ( d->studiesTreeWidget->invisibleRootItem() );
         studyItem->setText ( 0, infosMap["Description"] );
-        studyItem->setText ( 1, QDate::fromString ( infosMap["Date"], "yyyyMMdd" ).toString ( "dd/MM/yyyy" ) );
-        studyItem->setData ( 2, 0, infosMap["UID"] );
-        studyItem->setText ( 2, infosMap["UID"] );
+        studyItem->setData ( 1, 0, infosMap["UID"] );
+        studyItem->setText ( 1, infosMap["UID"] );
+        studyItem->setText ( 2, examDate.toString ( "dd/MM/yyyy" ) );
         studyItem->setData ( 3, 0, infosMap["ID"] );
     }
 }
 
 void QtDcmManager::foundSerie ( const QMap<QString, QString> &infosMap )
 {
+    QDate examDate = QDate::fromString ( infosMap["Date"], "yyyyMMdd" );
     if ( !d->seriesTreeWidget.isNull() ) {
         QTreeWidgetItem * serieItem = new QTreeWidgetItem ( d->seriesTreeWidget->invisibleRootItem() );
         serieItem->setText ( 0, infosMap["Description"] );
         serieItem->setText ( 1, infosMap["Modality"] );
-        serieItem->setText ( 2, QDate::fromString ( infosMap["Date"], "yyyyMMdd" ).toString ( "dd/MM/yyyy" ) );
-        serieItem->setText ( 3, infosMap["ID"] );
+        serieItem->setText ( 2, infosMap["ID"] );
+        serieItem->setText ( 3, examDate.toString ( "dd/MM/yyyy" ) );
         serieItem->setData ( 4, 0, QVariant ( infosMap["InstanceCount"] ) );
         serieItem->setData ( 5, 0, QVariant ( infosMap["Institution"] ) );
         serieItem->setData ( 6, 0, QVariant ( infosMap["Operator"] ) );
-        serieItem->setCheckState ( 0, Qt::Unchecked );
     }
 }
 
@@ -887,22 +888,22 @@ QString QtDcmManager::modality() const
 
 void QtDcmManager::setStartDate ( const QDate &date )
 {
-    d->date1 = date;
+    d->startDate = date;
 }
 
 QDate QtDcmManager::startDate() const 
 {
-    return d->date1;
+    return d->startDate;
 }
 
 void QtDcmManager::setEndDate ( const QDate &date )
 {
-    d->date2 = date;
+    d->endDate = date;
 }
 
 QDate QtDcmManager::endDate() const 
 {
-    return d->date2;
+    return d->endDate;
 }
 
 void QtDcmManager::addPatient()
