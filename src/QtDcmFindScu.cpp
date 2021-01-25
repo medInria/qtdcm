@@ -122,7 +122,7 @@ void QtDcmFindScu::findStudiesScu (const QString & patientId, const QString &pat
     {
         overrideKeys.push_back ( ( QString ( "StudyDescription=" ) + studyDescription ).toUtf8().data() );
     }
-    if (startDate.isEmpty() || endDate.isEmpty())
+    if (startDate.isEmpty() && endDate.isEmpty())
     {
         overrideKeys.push_back ( QString ( "StudyDate=").toUtf8().data() );
     }
