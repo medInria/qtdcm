@@ -125,6 +125,8 @@ protected:
     
 private:
     void findSeriesFromStudyRows();
+    void changeDate();
+    
     QtDcmPrivate *d;
 };
 

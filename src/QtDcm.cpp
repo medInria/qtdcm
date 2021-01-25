@@ -89,12 +89,12 @@ QtDcm::QtDcm ( QWidget *parent )
     QDate currentDate = QDate::currentDate();
     startDateEdit->setDate (  currentDate.addYears(-100) );
     endDateEdit->setDate ( currentDate );
-
+    
     QtDcmManager::instance()->setPatientsTreeWidget ( treeWidgetPatients );
     QtDcmManager::instance()->setStudiesTreeWidget ( treeWidgetStudies );
     QtDcmManager::instance()->setSeriesTreeWidget ( treeWidgetSeries );
-    QtDcmManager::instance()->setStartDate ( startDateEdit->date() );
-    QtDcmManager::instance()->setEndDate ( endDateEdit->date() );
+    QtDcmManager::instance()->setStartDate ( QDate() );
+    QtDcmManager::instance()->setEndDate ( QDate() );
 
     initConnections();
 }
@@ -340,21 +340,8 @@ void QtDcm::onStartDateChanged(const QDate &startdate)
         startDateEdit->setDate ( endDateEdit->date() );
         startDateEdit->blockSignals(false);
     }
-
     QtDcmManager::instance()->setStartDate ( startDateEdit->date() );
-
-    treeWidgetStudies->clear();
-    treeWidgetSeries->clear();
-
-    if ( treeWidgetPatients->currentItem() ) {
-        if ( d->mode == QtDcm::PACS_MODE ) {
-            QtDcmManager::instance()->findStudiesScu ( treeWidgetPatients->currentItem()->text(1), treeWidgetPatients->currentItem()->text ( 0 ) );
-            findSeriesFromStudyRows();
-        }
-        else {
-            qDebug() << "Date filtering not available in CD-Rom mode";
-        }
-    }
+    changeDate();
 }
 
 void QtDcm::onEndDateChanged (const QDate &enddate)
@@ -364,15 +351,18 @@ void QtDcm::onEndDateChanged (const QDate &enddate)
         endDateEdit->setDate(startDateEdit->date() );
         endDateEdit->blockSignals(false);
     }
-
     QtDcmManager::instance()->setEndDate ( endDateEdit->date() );
+    changeDate();
+}
 
+void QtDcm::changeDate()
+{
     treeWidgetStudies->clear();
     treeWidgetSeries->clear();
 
     if ( treeWidgetPatients->currentItem() ) {
         if ( d->mode == QtDcm::PACS_MODE ) {
-            QtDcmManager::instance()->findStudiesScu (treeWidgetPatients->currentItem()->text(1), treeWidgetPatients->currentItem()->text ( 0 ) );
+            QtDcmManager::instance()->findStudiesScu ( treeWidgetPatients->currentItem()->text(1), treeWidgetPatients->currentItem()->text ( 0 ) );
             findSeriesFromStudyRows();
         }
         else {

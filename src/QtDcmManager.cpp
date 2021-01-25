@@ -952,7 +952,6 @@ void QtDcmManager::addDataToImport ( const QString &uid, const QString & level )
     if ( !d->dataToImport.contains ( uid ) ) {
         d->dataToImport.append ( uid );
     }
-    qDebug()<<"data to import "<<d->dataToImport;
 }
 
 void QtDcmManager::removeDataToImport ( const QString &uid,  const QString & level )
