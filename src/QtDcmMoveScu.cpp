@@ -33,13 +33,14 @@ class QtDcmMoveScu::Private
 {
 
 public:
-    QStringList series;
+    QStringList data;
     QStringList filenames;
     QString outputDir;
     QString importDir;
     QString currentSerie;
 
     QtDcmMoveScu::eMoveMode mode;
+    QString queryLevel;
     QString imageId;
     
     
@@ -113,8 +114,10 @@ QtDcmMoveScu::QtDcmMoveScu ( QObject * parent )
     d->queryModel = QMPatientRoot;
     d->ignorePendingDatasets = OFTrue;
     d->outputDirectory = ".";
-    d->acseTimeout = 30;
+    d->acseTimeout = 60;
+    d->dimseTimeout = 60;
     d->blockMode = DIMSE_BLOCKING;
+    d->queryLevel = "undefined";
 
     d->mode = QtDcmMoveScu::IMPORT;
 }
@@ -135,9 +138,14 @@ void QtDcmMoveScu::setImageId ( const QString & id )
     d->imageId = id;
 }
 
-void QtDcmMoveScu::setSeries ( const QStringList & series )
+void QtDcmMoveScu::setData ( const QStringList & data )
 {
-    d->series = series;
+    d->data = data;
+}
+
+void QtDcmMoveScu::setQueryLevel(const QString &level)
+{
+    d->queryLevel = level;
 }
 
 void QtDcmMoveScu::setOutputDir ( const QString & dir )
@@ -160,24 +168,24 @@ void QtDcmMoveScu::onStopMove()
 void QtDcmMoveScu::run()
 {
     OFCondition cond;
-    d->step = ( int ) ( 100.0 / d->series.size() );
+    d->step = ( int ) ( 100.0 / d->data.size() );
     d->progressTotal = 0;
 
-    for ( int i = 0; i < d->series.size(); i++ ) {
-        d->currentSerie = d->series.at ( i );
-        const QDir serieDir ( d->outputDir + QDir::separator() + d->series.at ( i ) );
+    for ( int i = 0; i < d->data.size(); i++ ) {
+        d->currentSerie = d->data.at ( i );
+        const QDir serieDir ( d->outputDir + QDir::separator() + d->data.at ( i ) );
 
         if ( !serieDir.exists() ) {
-            QDir ( d->outputDir ).mkdir ( d->series.at ( i ) );
+            QDir ( d->outputDir ).mkdir ( d->data.at ( i ) );
         }
 
         d->outputDirectory = QString ( d->outputDir + QDir::separator() + d->currentSerie ).toUtf8().constData(); //OK because this std::string contain utf8 and will be wrap into OFFilename with utf16 conversion if needed at line 755
 
         if ( d->mode == IMPORT ) {
-            cond = this->move ( d->series.at ( i ) );
-            emit updateProgress ( ( int ) ( 100.0 * ( i+1 ) / d->series.size() ) );
+            cond = this->move ( d->data.at ( i ) );
+            emit updateProgress ( ( int ) ( 100.0 * ( i+1 ) / d->data.size() ) );
             d->progressTotal += d->step;
-            emit serieMoved ( serieDir.absolutePath(), d->series.at ( i ), i );
+            emit serieMoved ( serieDir.absolutePath(), d->data.at ( i ), i );
         }
         else {
             cond = this->move ( d->imageId );
@@ -202,13 +210,30 @@ OFCondition QtDcmMoveScu::move ( const QString & uid )
     };
 
     OFCondition cond;
-    this->addOverrideKey(QString("PatientID=*"));
-    this->addOverrideKey(QString("StudyInstanceUID=*"));
 
     if ( d->mode == IMPORT ) {
-        this->addOverrideKey ( QString ( "QueryRetrieveLevel=" ) + QString ( "" "SERIES" "" ) );
-        this->addOverrideKey ( QString ( "SeriesInstanceUID=" + uid ) );
-    }
+        qDebug()<<"move "<<d->queryLevel<<" with uid "<<uid;
+        if (d->queryLevel == "PATIENT")
+        {
+            this->addOverrideKey ( QString ( "QueryRetrieveLevel=" + d->queryLevel) );
+            this->addOverrideKey ( QString ( "PatientID=" + uid ) );
+        }
+        else if (d->queryLevel == "STUDY")
+        {
+            this->addOverrideKey ( QString ( "QueryRetrieveLevel=" + d->queryLevel) );
+            this->addOverrideKey ( QString ( "StudyInstanceUID=" + uid ) );
+
+        }
+        else if (d->queryLevel == "SERIES")
+        {
+            this->addOverrideKey ( QString ( "QueryRetrieveLevel=" + d->queryLevel) );
+            this->addOverrideKey ( QString ( "SeriesInstanceUID=" + uid ) );
+
+        }        
+        // this->addOverrideKey ( QString ( "QueryRetrieveLevel=" ) + QString ( "" "PATIENT" "" ) );
+        // this->addOverrideKey ( QString ( "PatientID=" + uid ) );
+        // qDebug()<<"patient to Import "<<uid;
+     }
     else {
         this->addOverrideKey ( QString ( "QueryRetrieveLevel=" ) + QString ( "" "IMAGE" "" ) );
         this->addOverrideKey ( QString ( "SOPInstanceUID=" + uid ) );

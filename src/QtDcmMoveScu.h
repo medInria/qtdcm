@@ -88,7 +88,9 @@ public:
 
     void setImportDir ( const QString & dir );
 
-    void setSeries ( const QStringList & series );
+    void setData ( const QStringList & data );
+
+    void setQueryLevel( const QString &queryLevel);
 
     void run();
 

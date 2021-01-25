@@ -69,7 +69,7 @@ public:
      */
     void findPatientsScu();
     void findStudiesScu ( const QString &patientId,  const QString &patientName );
-    void findSeriesScu (const QString &patientId, const QString &patientName, const QString &studyUID );
+    void findSeriesScu ( const QString &studyUID );
     void findImagesScu ( const QString &uid );
     void foundPatient ( const QMap<QString, QString> &infosMap );
     void foundStudy ( const QMap<QString, QString> &infosMap );
@@ -261,13 +261,13 @@ public:
      */
     QDate endDate() const;
 
-    void addSerieToImport ( const QString &uid );
+    void addDataToImport ( const QString &uid, const QString &level = "" );
 
-    void removeSerieToImport ( const QString &uid );
+    void removeDataToImport ( const QString &uid, const QString &level = "" );
 
-    void clearSeriesToImport();
+    void clearDataToImport();
 
-    int seriesToImportSize();
+    int dataToImportSize();
 
     /**
      * add patient in the list

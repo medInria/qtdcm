@@ -103,11 +103,9 @@ protected slots:
 
     void onEndDateChanged ( const QDate & enddate );
 
-    void onPatientItemSelected ( QTreeWidgetItem* current, QTreeWidgetItem* previous );
+    void onPatientItemClicked ( QTreeWidgetItem* current, int index );
 
-    void onStudyItemSelected ( QTreeWidgetItem* current, QTreeWidgetItem* previous );
-
-    void onSerieItemSelected ( QTreeWidgetItem* current, QTreeWidgetItem* previous );
+    void onStudyItemClicked ( QTreeWidgetItem* current, int index );
 
     void onSerieItemClicked ( QTreeWidgetItem* current, int index );
 
@@ -126,6 +124,9 @@ protected:
     void initConnections();
     
 private:
+    void findSeriesFromStudyRows();
+    void changeDate();
+    
     QtDcmPrivate *d;
 };
 

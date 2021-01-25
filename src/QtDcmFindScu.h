@@ -33,15 +33,16 @@ public:
 
     void findPatientsScu ( const QString & patientID );
     void findPatientsScu ( const QString & patientID, const QString & patientSex );
+    void findPatientsScu ( const QString & patientID, const QString & patientSex, const QString & patientName );
 
     void findStudiesScu ( const QString & patientName );
     void findStudiesScu ( const QString & patientName, const QString & studyDescription );
     void findStudiesScu ( const QString & patientId, const QString & patientName, const QString & studyDescription, const QString & startDate, const QString & endDate );
 
-    void findSeriesScu ( const QString & patientId, const QString & patientName, const QString & studyUID );
-    void findSeriesScu ( const QString & patientId, const QString & patientName, const QString & studyUID, const QString & modality );
-    void findSeriesScu ( const QString & patientId, const QString & patientName, const QString & studyUID, const QString & studyDescription, const QString & modality );
-    void findSeriesScu ( const QString & patientId, const QString & patientName, const QString & studyUID, const QString & studyDescription, const QString & serieDescription, const QString & modality );
+    void findSeriesScu ( const QString & studyUID );
+    void findSeriesScu ( const QString & studyUID, const QString & modality );
+    void findSeriesScu ( const QString & studyUID, const QString & studyDescription, const QString & modality );
+    void findSeriesScu ( const QString & studyUID, const QString & studyDescription, const QString & serieDescription, const QString & modality );
 
     void findImagesScu ( const QString & seriesUID );
     void findImageScu ( const QString & imageUID);
