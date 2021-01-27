@@ -144,12 +144,12 @@ QtDcmManager::QtDcmManager(QObject *parent)
     d->outputdirMode = DIALOG;
 
     d->patientName = "";
-    d->patientId = "*";
+    d->patientId = "";
     d->patientBirthDate = "";
     d->modality = "";
     d->serieDescription = "";
     d->studyDescription = "";
-    d->patientSex = "*";
+    d->patientSex = "";
     d->queryLevel = "undefined";
 
     d->mainWidget = NULL;
@@ -295,9 +295,8 @@ void QtDcmManager::findStudiesScu (const QString &patientId, const QString &pati
 void QtDcmManager::findSeriesScu ( const QString &studyUid )
 {
     d->dataToImport.clear();
-
     QtDcmFindScu * finder = new QtDcmFindScu ( this );
-    finder->findSeriesScu (studyUid, d->studyDescription, d->serieDescription, d->modality );
+    finder->findSeriesScu (studyUid, d->studyDescription, d->serieDescription, d->modality);
     delete finder;
 }
 
