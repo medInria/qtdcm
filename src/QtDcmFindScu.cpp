@@ -55,12 +55,6 @@ QtDcmFindScu::~QtDcmFindScu()
     d = NULL;
 }
 
-
-void QtDcmFindScu::findPatientsScu (const QString &patientId)
-{
-    this->findPatientsScu ( patientId, "*" );
-}
-
 void QtDcmFindScu::findPatientsScu (const QString &patientId, const QString &patientSex)
 {
     OFList<OFString> overrideKeys;
@@ -98,15 +92,6 @@ void QtDcmFindScu::findPatientsScu (const QString &patientId, const QString &pat
     doQuery ( overrideKeys, QtDcmFindCallback::PATIENT );
 
 }
-void QtDcmFindScu::findStudiesScu (const QString &patientName)
-{
-    this->findStudiesScu ( QString("*"), patientName, "*", QDate ( 1900,01,01 ).toString ( "yyyyMMdd" ),QDate::currentDate().toString ( "yyyyMMdd" ) );
-}
-
-void QtDcmFindScu::findStudiesScu(const QString &patientName, const QString &studyDescription)
-{
-    this->findStudiesScu ( QString("*"), patientName, studyDescription, QDate ( 1900,01,01 ).toString ( "yyyyMMdd" ),QDate::currentDate().toString ( "yyyyMMdd" ) );
-}
 
 void QtDcmFindScu::findStudiesScu (const QString & patientId, const QString &patientName, const QString &studyDescription, const QString &startDate, const QString &endDate)
 {
@@ -141,16 +126,6 @@ void QtDcmFindScu::findStudiesScu (const QString & patientId, const QString &pat
 
     doQuery ( overrideKeys, QtDcmFindCallback::STUDY );
 
-}
-
-void QtDcmFindScu::findSeriesScu (const QString &studyUID)
-{
-    this->findSeriesScu (studyUID, "", "", "" );
-}
-
-void QtDcmFindScu::findSeriesScu (const QString &studyUID, const QString &studyDescription, const QString &modality)
-{
-    this->findSeriesScu (studyUID, studyDescription, "", modality );
 }
 
 void QtDcmFindScu::findSeriesScu (const QString &studyUID, const QString &studyDescription, const QString &serieDescription, const QString &modality)
@@ -194,7 +169,7 @@ void QtDcmFindScu::findSeriesScu (const QString &studyUID, const QString &studyD
     overrideKeys.push_back ( QString ( "AcquisitionNumber" ).toUtf8().data() );
     overrideKeys.push_back ( QString ( "NumberOfSeriesRelatedInstances" ).toUtf8().data() );
 
-    doQuery ( overrideKeys, QtDcmFindCallback::SERIE );
+    doQuery ( overrideKeys, QtDcmFindCallback::SERIE , UID_FINDStudyRootQueryRetrieveInformationModel);
 }
 
 void QtDcmFindScu::findImagesScu (const QString &seriesUID)
@@ -241,7 +216,7 @@ bool QtDcmFindScu::checkServerConnection ( int timeout )
     return result;
 }
 
-bool QtDcmFindScu::doQuery ( const OFList<OFString>& overrideKeys, QtDcmFindCallback::cbType level )
+bool QtDcmFindScu::doQuery ( const OFList<OFString>& overrideKeys, QtDcmFindCallback::cbType level, QString queryRetrieveInfoModel )
 {
     //Image level
     OFList<OFString> fileNameList;
@@ -263,7 +238,7 @@ bool QtDcmFindScu::doQuery ( const OFList<OFString>& overrideKeys, QtDcmFindCall
                                 d->manager->currentPacs().port().toInt(),
                                 QtDcmPreferences::instance()->aetitle().toUtf8().data(),
                                 d->manager->currentPacs().aetitle().toUtf8().data(),
-                                UID_FINDPatientRootQueryRetrieveInformationModel, EXS_Unknown,
+                                queryRetrieveInfoModel.toStdString().c_str() , EXS_Unknown,
                                 DIMSE_BLOCKING, 0, ASC_DEFAULTMAXPDU, false, false, 1, false, -1, &keys, &callback, &fileNameList ).bad() ) {
         QtDcmManager::instance()->displayErrorMessage ( tr ( "Cannot perform query C-FIND" ) );
     }
