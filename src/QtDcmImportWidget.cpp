@@ -23,6 +23,7 @@
 QtDcmImportWidget::QtDcmImportWidget(QWidget* parent) : QWidget(parent)
 {
     this->setupUi(this);
+    this->progressLabel->hide();
 }
 
 QtDcmImportWidget::~QtDcmImportWidget()
@@ -37,6 +38,16 @@ void QtDcmImportWidget::hideProgressBar()
 void QtDcmImportWidget::showProgressBar()
 {
     this->importProgressBar->show();
+}
+
+void QtDcmImportWidget::hideProgressLabel()
+{
+    this->progressLabel->hide();
+}
+
+void QtDcmImportWidget::showProgressLabel()
+{
+    this->progressLabel->show();
 }
 
 void QtDcmImportWidget::updateProgressBar(int i)

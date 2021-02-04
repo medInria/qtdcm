@@ -274,7 +274,6 @@ void QtDcmManager::displayMessage ( const QString &info )
 void QtDcmManager::findPatientsScu()
 {
     if ( d->mainWidget->pacsComboBox->count() ) {
-        d->dataToImport.clear();
         d->mode = PACS;
 
         QtDcmFindScu * finder = new QtDcmFindScu ( this );
@@ -285,8 +284,6 @@ void QtDcmManager::findPatientsScu()
 
 void QtDcmManager::findStudiesScu (const QString &patientId, const QString &patientName)
 {
-    d->dataToImport.clear();
-
     QtDcmFindScu * finder = new QtDcmFindScu ( this );
     finder->findStudiesScu ( patientId, patientName, d->studyDescription, d->startDate.toString( "yyyyMMdd" ), d->endDate.toString( "yyyyMMdd" ));
     delete finder;
@@ -294,7 +291,6 @@ void QtDcmManager::findStudiesScu (const QString &patientId, const QString &pati
 
 void QtDcmManager::findSeriesScu ( const QString &studyUid )
 {
-    d->dataToImport.clear();
     QtDcmFindScu * finder = new QtDcmFindScu ( this );
     finder->findSeriesScu (studyUid, d->studyDescription, d->serieDescription, d->modality);
     delete finder;
@@ -374,7 +370,6 @@ void QtDcmManager::loadDicomdir()
 
 void QtDcmManager::findPatientsDicomdir()
 {
-    d->dataToImport.clear();
     QtDcmFindDicomdir * finder = new QtDcmFindDicomdir ( this );
     finder->setDcmItem ( d->dfile.getDataset() );
     finder->findPatients();
@@ -383,7 +378,6 @@ void QtDcmManager::findPatientsDicomdir()
 
 void QtDcmManager::findStudiesDicomdir ( const QString &patientName )
 {
-    d->dataToImport.clear();
     QtDcmFindDicomdir * finder = new QtDcmFindDicomdir ( this );
     finder->setDcmItem ( d->dfile.getDataset() );
     finder->findStudies ( patientName );
@@ -393,7 +387,6 @@ void QtDcmManager::findStudiesDicomdir ( const QString &patientName )
 void QtDcmManager::findSeriesDicomdir ( const QString &patientName, 
                                         const QString &studyUID )
 {
-    d->dataToImport.clear();
     QtDcmFindDicomdir * finder = new QtDcmFindDicomdir ( this );
     finder->setDcmItem ( d->dfile.getDataset() );
     finder->findSeries ( patientName, studyUID );
@@ -444,7 +437,7 @@ void QtDcmManager::moveSelectedSeries()
         qWarning() << "*    DataUID = " << d->dataToImport;
         qWarning() << "*    ImportDir = " << d->outputDir;
         qWarning() << "******";
-
+        d->importWidget->showProgressLabel();
         QtDcmMoveScu * mover = new QtDcmMoveScu ( this );
         mover->setOutputDir ( d->tempDir.absolutePath() );
         mover->setData ( d->dataToImport );
@@ -459,6 +452,7 @@ void QtDcmManager::moveSelectedSeries()
         connect ( mover, &QtDcmMoveScu::finished,
                   mover, &QtDcmMoveScu::deleteLater);
         mover->start();
+
     }
         break;
     default:
@@ -613,15 +607,14 @@ void QtDcmManager::onSerieMoved ( const QString &directory , const QString &seri
             emit importFinished(directory);
         }
     }
-
-    if ( number == this->dataToImportSize() - 1 )
-        emit importFinished(directory);
+    emit importFinished(directory);
 }
 
 void QtDcmManager::moveSeriesFinished()
 {
     if ( d->importWidget ) {
         d->importWidget->importProgressBar->setValue ( 0 );
+        d->importWidget->hideProgressLabel();
     }
 }
 
@@ -946,8 +939,11 @@ QString QtDcmManager::currentSeriesDirectory() const
 
 void QtDcmManager::addDataToImport ( const QString &uid, const QString & level )
 {
-    d->dataToImport.clear();
-    d->queryLevel = level;
+    if (d->queryLevel != level)
+    {
+        d->dataToImport.clear();
+        d->queryLevel = level;
+    }
     if ( !d->dataToImport.contains ( uid ) ) {
         d->dataToImport.append ( uid );
     }
