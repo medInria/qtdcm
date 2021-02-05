@@ -34,11 +34,13 @@ public:
     
     void hideProgressBar();
     void showProgressBar();
+    void hideProgressLabel();
+    void showProgressLabel();
     void setImportButtonEnabled(bool enable);
 
 public slots:
   void updateProgressBar ( int i );
-  
+
 };
 
 #endif // QTDCMIMPORTWIDGET_H

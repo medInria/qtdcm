@@ -76,21 +76,12 @@ public:
     OFBool ignorePendingDatasets;
     DcmDataset overrideKeys;
     OFString outputDirectory;
-
-    int slicesCount;
-    int progressTotal;
-    int progressSerie;
-    int step;
 };
 
 QtDcmMoveScu::QtDcmMoveScu ( QObject * parent ) 
     : QThread(parent), 
       d ( new QtDcmMoveScu::Private )
 {
-    d->progressTotal = 0;
-    d->progressSerie = 0;
-    d->step = 0;
-
     d->net = 0;
     d->assoc = 0;
     d->params = 0;
@@ -168,8 +159,10 @@ void QtDcmMoveScu::onStopMove()
 void QtDcmMoveScu::run()
 {
     OFCondition cond;
-    d->step = ( int ) ( 100.0 / d->data.size() );
-    d->progressTotal = 0;
+
+    int lowThreshold = 15;
+    int step = (100-lowThreshold)/(d->data.size());
+    emit updateProgress ( lowThreshold );
 
     for ( int i = 0; i < d->data.size(); i++ ) {
         d->currentSerie = d->data.at ( i );
@@ -183,14 +176,14 @@ void QtDcmMoveScu::run()
 
         if ( d->mode == IMPORT ) {
             cond = this->move ( d->data.at ( i ) );
-            emit updateProgress ( ( int ) ( 100.0 * ( i+1 ) / d->data.size() ) );
-            d->progressTotal += d->step;
+            emit updateProgress ( lowThreshold + ((i+1)*step));
             emit serieMoved ( serieDir.absolutePath(), d->data.at ( i ), i );
         }
         else {
             cond = this->move ( d->imageId );
         }
     }
+    emit updateProgress(100);
 }
 
 OFCondition QtDcmMoveScu::move ( const QString & uid )
@@ -230,10 +223,7 @@ OFCondition QtDcmMoveScu::move ( const QString & uid )
             this->addOverrideKey ( QString ( "SeriesInstanceUID=" + uid ) );
 
         }        
-        // this->addOverrideKey ( QString ( "QueryRetrieveLevel=" ) + QString ( "" "PATIENT" "" ) );
-        // this->addOverrideKey ( QString ( "PatientID=" + uid ) );
-        // qDebug()<<"patient to Import "<<uid;
-     }
+    }
     else {
         this->addOverrideKey ( QString ( "QueryRetrieveLevel=" ) + QString ( "" "IMAGE" "" ) );
         this->addOverrideKey ( QString ( "SOPInstanceUID=" + uid ) );
@@ -717,11 +707,7 @@ OFCondition QtDcmMoveScu::echoSCP ( T_ASC_Association * assoc, T_DIMSE_Message *
 
 OFCondition QtDcmMoveScu::storeSCP ( T_ASC_Association *assoc, T_DIMSE_Message *msg, T_ASC_PresentationContextID presID, void* subOpCallbackData )
 {
-    QtDcmMoveScu * self = static_cast<QtDcmMoveScu * >(subOpCallbackData);
-    if (!self) {
-        qWarning() << "Cannot cast caller";
-        return EC_IllegalCall;
-    }
+    QtDcmMoveScu * self = reinterpret_cast<QtDcmMoveScu * >(subOpCallbackData);
 
     OFCondition cond = EC_Normal;
     T_DIMSE_C_StoreRQ *req;
@@ -763,16 +749,13 @@ OFCondition QtDcmMoveScu::storeSCP ( T_ASC_Association *assoc, T_DIMSE_Message *
 
 void QtDcmMoveScu::storeSCPCallback ( void *callbackData, T_DIMSE_StoreProgress *progress, T_DIMSE_C_StoreRQ *req, char *imageFile, DcmDataset **imageDataSet, T_DIMSE_C_StoreRSP *rsp, DcmDataset **statusDetail )
 {
-    QtDcmMoveScu * self = static_cast<QtDcmMoveScu * >(callbackData);
-    if (!self) {
-        qWarning() << "Cannot cast caller";
-        return;
-    }
-    
+    QtDcmMoveScu * self = reinterpret_cast<QtDcmMoveScu * >(callbackData);
+
     DIC_UI sopClass;
     DIC_UI sopInstance;
-
+    
     if ( progress->state == DIMSE_StoreEnd ) {
+
         *statusDetail = NULL;
         if ( ( imageDataSet != NULL ) && ( *imageDataSet != NULL ) && !self->d->bitPreserving && !self->d->ignore ) {
             /* create full path name for the output file */
@@ -868,15 +851,7 @@ void QtDcmMoveScu::subOpCallback ( void * caller, T_ASC_Network *aNet, T_ASC_Ass
     if ( !caller )
         return;
 
-    QtDcmMoveScu * self = static_cast<QtDcmMoveScu * >(caller);
-    if (!self) {
-        qWarning() << "Cannot cast caller";
-        return;
-    }
-    
-    if ( self->d->slicesCount ) {
-        emit self->updateProgress ( self->d->progressTotal + ( int ) ( ( ( float ) ( self->d->step * ( self->d->progressSerie ) / self->d->slicesCount ) ) ) );
-    }
+    QtDcmMoveScu * self = reinterpret_cast<QtDcmMoveScu * >(caller);
 
     if ( aNet == NULL ) return; /* help no net ! */
 
@@ -888,26 +863,12 @@ void QtDcmMoveScu::subOpCallback ( void * caller, T_ASC_Network *aNet, T_ASC_Ass
         /* be a service class provider */
         subOpSCP ( subAssoc, caller );
     }
-
-    self->d->progressSerie ++;
 }
 
 void QtDcmMoveScu::moveCallback ( void *caller, T_DIMSE_C_MoveRQ * req, int responseCount, T_DIMSE_C_MoveRSP * rsp )
 {
     if ( !caller )
         return;
-
-    QtDcmMoveScu * self = static_cast<QtDcmMoveScu * >(caller);
-    if (!self) {
-        qWarning() << "Cannot cast caller";
-        return;
-    }
-
-    if ( responseCount == 1 ) {
-        self->d->progressSerie = 0;
-    }
-
-    self->d->slicesCount = rsp->NumberOfRemainingSubOperations + rsp->NumberOfFailedSubOperations + rsp->NumberOfWarningSubOperations + rsp->NumberOfCompletedSubOperations;
 
     OFString temp_str;
 
@@ -992,8 +953,6 @@ OFCondition QtDcmMoveScu::moveSCU ( T_ASC_Association * assoc, const char *fname
     else {
         strcpy( req.MoveDestination, d->moveDestination );
     }
-
-
     const OFCondition cond = DIMSE_moveUser ( assoc, 
                                               d->presId, 
                                               &req, 
