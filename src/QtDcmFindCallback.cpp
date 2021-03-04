@@ -90,6 +90,8 @@ void QtDcmFindCallback::callback ( T_DIMSE_C_FindRQ *request, int responseCount,
         infosMap.insert ( "ID", QString ( info.c_str() ) );
         responseIdentifiers->findAndGetOFString ( DCM_StudyInstanceUID, info );
         infosMap.insert ( "UID", QString ( info.c_str() ) );
+        responseIdentifiers->findAndGetOFString ( DCM_PatientID, info );
+        infosMap.insert ( "PatientID", QString ( info.c_str() ) );
 
         QtDcmManager::instance()->foundStudy ( infosMap );
 
@@ -110,6 +112,9 @@ void QtDcmFindCallback::callback ( T_DIMSE_C_FindRQ *request, int responseCount,
         infosMap.insert ( "Operator", QString ( info.c_str() ) );
         responseIdentifiers->findAndGetOFString ( DCM_NumberOfSeriesRelatedInstances, info );
         infosMap.insert ( "InstanceCount", QString ( info.c_str() ) );
+
+        responseIdentifiers->findAndGetOFString ( DCM_StudyInstanceUID, info );
+        infosMap.insert ( "StudyInstanceUID", QString ( info.c_str() ) );
 
         QtDcmManager::instance()->foundSerie ( infosMap );
         break;

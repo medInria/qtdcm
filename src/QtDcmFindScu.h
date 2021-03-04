@@ -41,6 +41,7 @@ public:
     void findImagesScu ( const QString & seriesUID );
     void findImageScu ( const QString & imageUID);
 
+    void findStudiesFromPatient(const QString &patientID);
 protected:
 
     bool doQuery(const OFList<OFString>& overrideKeys, QtDcmFindCallback::cbType level, QString queryRetrieveInfoModel = UID_FINDPatientRootQueryRetrieveInformationModel);

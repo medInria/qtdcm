@@ -176,11 +176,14 @@ void QtDcm::onPatientItemClicked ( QTreeWidgetItem * item, int column )
     treeWidgetStudies->clear();
     treeWidgetSeries->clear();
     QtDcmManager::instance()->clearDataToImport();
-
+    QtDcmManager::instance()->clearPatientDataToFetch();
+    QtDcmManager::instance()->clearSeriesDataToFetch();
     if ( d->mode == QtDcm::PACS_MODE )
     {
         for (QTreeWidgetItem *ptItem : treeWidgetPatients->selectedItems())
         {
+            QtDcmManager::instance()->addPatientDataToFetch(ptItem->text(1), ptItem->text(0), 
+                                                            ptItem->text(2), ptItem->text(3));
             QtDcmManager::instance()->findStudiesScu (ptItem->text(1), ptItem->text ( 0 ) );
             QtDcmManager::instance()->addDataToImport(ptItem->text(1), "PATIENT");
         }
@@ -203,7 +206,7 @@ void QtDcm::onStudyItemClicked(QTreeWidgetItem * item, int column )
     QtDcmManager::instance()->clearSerieInfo();
     QtDcmManager::instance()->clearPreview();
     QtDcmManager::instance()->clearDataToImport();
-    
+    QtDcmManager::instance()->clearSeriesDataToFetch();
     treeWidgetSeries->clear();
 
     if ( d->mode == QtDcm::PACS_MODE ) 

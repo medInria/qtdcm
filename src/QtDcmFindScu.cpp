@@ -200,6 +200,21 @@ void QtDcmFindScu::findImageScu (const QString &imageUID)
     doQuery ( overrideKeys, QtDcmFindCallback::IMAGE );
 }
 
+void QtDcmFindScu::findStudiesFromPatient(const QString &patientID)
+{
+    qDebug()<<"patientID "<<patientID;
+    OFList<OFString> overrideKeys;
+    overrideKeys.push_back ( ( QString ( "QueryRetrieveLevel=" ) + QString ( "" "PATIENT" "" ) ).toUtf8().data() );
+    overrideKeys.push_back ( ( QString ( "PatientName=" ) + patientID ).toUtf8().data() );
+    // overrideKeys.push_back ( QString ( "PatientName").toUtf8().data() );
+
+    //Study level
+    // overrideKeys.push_back ( QString ( "StudyDescription" ).toUtf8().data() );
+    // overrideKeys.push_back ( QString ( "SeriesDescription" ).toUtf8().data() );
+
+    doQuery ( overrideKeys, QtDcmFindCallback::TEST );
+}
+
 bool QtDcmFindScu::checkServerConnection ( int timeout )
 {
     bool result = true;

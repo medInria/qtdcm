@@ -176,8 +176,16 @@ void QtDcmMoveScu::run()
 
         if ( d->mode == IMPORT ) {
             cond = this->move ( d->data.at ( i ) );
-            emit updateProgress ( lowThreshold + ((i+1)*step));
-            emit serieMoved ( serieDir.absolutePath(), d->data.at ( i ), i );
+            if (cond.status()==OF_ok)
+            {
+                emit updateProgress ( lowThreshold + ((i+1)*step));
+                emit serieMoved ( serieDir.absolutePath(), d->data.at ( i ), i );
+            }
+            else
+            {
+                emit updateProgress (0);
+                emit moveFailed(cond.text());
+            }
         }
         else {
             cond = this->move ( d->imageId );
@@ -789,6 +797,10 @@ void QtDcmMoveScu::storeSCPCallback ( void *callbackData, T_DIMSE_StoreProgress 
                 }
             }
         }
+    }
+    else if (progress->state == DIMSE_StoreProgressing)
+    {
+        emit self->moveInProgress(QString("C-Move in progress..."));
     }
 
     return;
