@@ -111,11 +111,11 @@ protected slots:
 
     void onDicomMediaButtonClicked();
 
-    void onPatientNameTextChanged ( const QString & pName);
+    void onPatientNameTextChanged ();
 
-    void onSerieDescriptionTextChanged ( const QString & description );
+    void onSerieDescriptionTextChanged  ();
 
-    void onStudyDescriptionTextChanged ( const QString & description );
+    void onStudyDescriptionTextChanged ();
 
 protected:
     void loadPatientsFromDicomdir();
