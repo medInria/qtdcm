@@ -61,6 +61,12 @@ public:
         PACS
     };
 
+    enum eMoveStatus {
+        KO = -1,
+        OK = 0,
+        PENDING = 1,
+    };
+    
     static QtDcmManager* instance();
     static void destroy();
 
@@ -300,6 +306,13 @@ public:
      */
     void deleteTemporaryDirs();
 
+    void addPatientDataToFetch(const QString &patientID, const QString &patientName,
+                                const QString &birthDate, const QString &gender);
+
+
+    void clearPatientDataToFetch();
+    void clearSeriesDataToFetch();
+
 public slots:
 //    void onPatientFound()
 
@@ -310,13 +323,18 @@ public slots:
     void onSerieMoved ( const QString &directory, const QString &uid, int number );
 
     void importSelectedSeries();
+    void fetchSelectedData();
     void importToDirectory ( const QString &directory );
+    void onMoveRequested(const QString &uid, const QString queryLevel);
 
 signals:
     void serieMoved ( const QString &directory );
     void importFinished(const QString &directory);
+    void updateProgressLevel(int level);
     void gettingPreview();
-    
+    void fetchFinished(QHash<QString, QHash<QString, QVariant>> patientData,
+                       QHash<QString, QHash<QString, QVariant>> seriesData);
+    void moveState(int status, const QString &pathOrMessage);
 private:
     /*!
      * \brief QtDcmManager constructor, private on purpose as it's a singleton
@@ -328,6 +346,9 @@ private:
     void generateCurrentSerieDir();
 
     void deleteCurrentSerieDir();
+
+    QHash<QString, QHash<QString, QVariant>> getPatientsToFetch(QList<QString> studyUIDs);
+    QHash<QString, QHash<QString, QVariant>> getSeriesToFetch(QList<QString> seriesUIDs);
 
     /**
      * Create the temporary directory (/tmp/qtdcm on Unix) and the logging directory.

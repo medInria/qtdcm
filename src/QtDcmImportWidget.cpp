@@ -24,6 +24,7 @@ QtDcmImportWidget::QtDcmImportWidget(QWidget* parent) : QWidget(parent)
 {
     this->setupUi(this);
     this->progressLabel->hide();
+    this->fetchButton->hide();
 }
 
 QtDcmImportWidget::~QtDcmImportWidget()
@@ -50,6 +51,11 @@ void QtDcmImportWidget::showProgressLabel()
     this->progressLabel->show();
 }
 
+void QtDcmImportWidget::setProgressLabelMessage(const QString &msg)
+{
+    this->progressLabel->setText(msg);
+}
+
 void QtDcmImportWidget::updateProgressBar(int i)
 {
     this->importProgressBar->setValue(i);
@@ -59,3 +65,9 @@ void QtDcmImportWidget::setImportButtonEnabled(bool enable)
 {
   this->importButton->setEnabled(enable);
 }
+
+void QtDcmImportWidget::setFetchMode()
+{
+    this->fetchButton->show();
+}
+

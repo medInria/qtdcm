@@ -101,7 +101,8 @@ signals:
     void updateProgress ( int i );
     void previewSlice ( const QString & filename );
     void serieMoved(const QString & directory, const QString & uid, int number);
-
+    void moveFailed(const QString &message);
+    void moveInProgress(const QString &message);
 protected:
     OFCondition move ( const QString & uid );
 

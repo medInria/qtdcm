@@ -62,7 +62,6 @@ namespace {
       if (date == QDate()) {
           return "*";
       }
-      
       return date.toString("yyyyMMdd");
   }
   
@@ -109,6 +108,9 @@ public:
     QPointer<QtDcmSerieInfoWidget> serieInfoWidget;          /** The pointer to the serie info widget */
 
     bool useConverter;                               /** Use a converter ? */
+
+    QHash<QString, QHash<QString, QVariant>> patientData; /** key : patientID => values : [patientName, birthdate, gender and the list of attached studies]*/
+    QHash<QString, QHash<QString, QVariant>> seriesData; /** key : seriesInstanceUID => values : [studyInstanceUID, seriesDescription, modality]*/
 };
 
 QtDcmManager * QtDcmManager::_instance = 0;
@@ -202,6 +204,8 @@ void QtDcmManager::setImportWidget ( QtDcmImportWidget* widget )
     d->importWidget = widget;
     QObject::connect ( d->importWidget->importButton, &QPushButton::clicked,
                        this,                          &QtDcmManager::importSelectedSeries);
+    QObject::connect ( d->importWidget->fetchButton, &QPushButton::clicked,
+                       this,                          &QtDcmManager::fetchSelectedData);
 }
 
 void QtDcmManager::setPreviewWidget ( QtDcmPreviewWidget* widget )
@@ -323,7 +327,20 @@ void QtDcmManager::foundStudy ( const QMap<QString, QString> &infosMap )
         studyItem->setData ( 1, 0, infosMap["UID"] );
         studyItem->setText ( 1, infosMap["UID"] );
         studyItem->setText ( 2, examDate.toString ( "dd/MM/yyyy" ) );
-        studyItem->setData ( 3, 0, infosMap["ID"] );
+        studyItem->setData ( 3, 0, infosMap["ID"] ); 
+        
+        // for each study found, we populate d->patientData (QHash) with infos related to study then append it to the list of studies attached to the patient
+        QHash<QString, QVariant> &patientEntry = d->patientData[infosMap["PatientID"]];
+        if (!patientEntry.isEmpty())
+        {
+            QHash<QString, QVariant> studies = patientEntry["studies"].toHash();
+            if (!studies.contains(infosMap["UID"]))
+            {
+                studies.insert(infosMap["UID"], infosMap["Description"]);
+                findSeriesScu(infosMap["UID"]);
+            }
+            patientEntry["studies"] = studies;
+        }
     }
 }
 
@@ -339,6 +356,15 @@ void QtDcmManager::foundSerie ( const QMap<QString, QString> &infosMap )
         serieItem->setData ( 4, 0, QVariant ( infosMap["InstanceCount"] ) );
         serieItem->setData ( 5, 0, QVariant ( infosMap["Institution"] ) );
         serieItem->setData ( 6, 0, QVariant ( infosMap["Operator"] ) );
+        
+        QHash<QString, QVariant> &seriesEntry = d->seriesData[infosMap["ID"]];
+        if (seriesEntry.isEmpty())
+        {
+            seriesEntry["StudyInstanceUID"] = infosMap["StudyInstanceUID"];
+            seriesEntry["SeriesDescription"] = infosMap["Description"];
+            seriesEntry["Modality"] = infosMap["Modality"];
+        }
+
     }
 }
 
@@ -461,6 +487,42 @@ void QtDcmManager::moveSelectedSeries()
     }
 }
 
+void QtDcmManager::onMoveRequested(const QString &uid, const QString queryLevel)
+{
+    if ( !d->tempDir.exists() || d->mode != PACS) {
+        return;
+    }
+    qWarning() << "****** Move request from External Application :";
+    qWarning() << "*    by default IMPORT";
+    qWarning() << "*    OutputDir = " << d->tempDir.absolutePath();
+    qWarning() << "*    DataUID = " << uid;
+    qWarning() << "*    QueryLevel = " << queryLevel;
+    qWarning() << "*    ImportDir = " << d->outputDir;
+    qWarning() << "******";
+    QStringList dataToRetrieve;
+    dataToRetrieve << uid;
+    QtDcmMoveScu * mover = new QtDcmMoveScu ( this );
+    mover->setOutputDir ( d->tempDir.absolutePath() );
+    mover->setData ( dataToRetrieve );
+    mover->setImportDir ( d->outputDir );
+    mover->setQueryLevel( queryLevel );
+    connect ( mover, &QtDcmMoveScu::updateProgress,
+                  this,  &QtDcmManager::updateProgressLevel);
+    connect( mover, &QtDcmMoveScu::serieMoved, [&](const QString &path){
+        emit moveState(static_cast<int>(eMoveStatus::OK), path);
+    });
+    connect( mover, &QtDcmMoveScu::moveInProgress, [&](const QString &message){
+        emit moveState(static_cast<int>(eMoveStatus::PENDING), message);
+    });
+    connect( mover, &QtDcmMoveScu::moveFailed, [&](const QString &reason){
+        emit moveState(static_cast<int>(eMoveStatus::KO), reason);
+    });    
+    connect ( mover, &QtDcmMoveScu::finished,
+                mover, &QtDcmMoveScu::deleteLater);
+    mover->start();
+
+}
+
 void QtDcmManager::getPreviewFromSelectedSerie ( const QString &uid, int elementIndex )
 {
     if ( !d->tempDir.exists() ) {
@@ -581,6 +643,105 @@ void QtDcmManager::importSelectedSeries()
     }
 }
 
+void QtDcmManager::fetchSelectedData()
+{
+    QHash<QString, QHash<QString, QVariant>> ptData;
+    QHash<QString, QHash<QString, QVariant>> seData;
+
+    if (d->queryLevel=="undefined")
+    {
+        return;
+    }
+    else if (d->queryLevel=="PATIENT")
+    {
+        ptData = d->patientData;
+        seData = d->seriesData;
+    }
+    else if (d->queryLevel=="STUDY")
+    {
+        ptData = getPatientsToFetch(d->dataToImport);
+        seData = d->seriesData;
+    }
+    else if (d->queryLevel=="SERIES")
+    {
+        seData = getSeriesToFetch(d->dataToImport);
+        QList<QString> studyUIDs = seData.keys();
+        for (QHash<QString, QVariant> &seEntry : seData)
+        {
+            studyUIDs.append(seEntry["StudyInstanceUID"].toString());
+        }
+        ptData = getPatientsToFetch(studyUIDs);
+    }
+
+    emit(fetchFinished(ptData, seData));
+}
+
+QHash<QString, QHash<QString, QVariant>> QtDcmManager::getPatientsToFetch(QList<QString> studyUIDs)
+{
+    QHash<QString, QHash<QString, QVariant>> ptData;
+    QHash<QString, QVariant> tmpStudies;
+    QHash<QString, QVariant> ptEntry;
+    for (QHash<QString, QVariant> &patientEntry : d->patientData)
+    {
+        tmpStudies.clear();
+        ptEntry.clear();
+        QString pKey = d->patientData.key(patientEntry);
+        QHash<QString, QVariant> studies = patientEntry["studies"].toHash();
+        QList<QString> keys = studies.keys();
+        for (QString key : keys)
+        {
+            if (studyUIDs.contains(key))
+            {
+                tmpStudies.insert(key, studies.value(key));
+            }
+        }
+        if (!tmpStudies.isEmpty())
+        {
+            ptEntry["PatientName"] = patientEntry["PatientName"];
+            ptEntry["BirthDate"] = patientEntry["BirthDate"];
+            ptEntry["Gender"] = patientEntry["Gender"];
+            ptEntry["studies"] = tmpStudies;
+            ptData[pKey] = ptEntry;
+        }
+    }
+
+    return ptData;
+}
+
+QHash<QString, QHash<QString, QVariant>>  QtDcmManager::getSeriesToFetch(QList<QString> seriesUIDs)
+{
+    QHash<QString, QHash<QString, QVariant>> seData;
+    QList<QString> keys = d->seriesData.keys();
+    for (QString key : keys)
+    {
+        if (seriesUIDs.contains(key))
+        {
+            seData[key] = d->seriesData[key];
+        }
+    }
+    return seData;
+}
+
+void QtDcmManager::addPatientDataToFetch(const QString &patientID, const QString &patientName, const QString &birthDate, const QString &gender)
+{
+    QHash<QString, QVariant> &patientEntry = d->patientData[patientID];
+    if (patientEntry.isEmpty())
+    {
+        patientEntry["PatientName"] = patientName;
+        patientEntry["BirthDate"] = QDate::fromString ( birthDate, "dd/MM/yyyy" ).toString ( "yyyyMMdd" );
+        patientEntry["Gender"] = gender;
+    }
+}
+
+void QtDcmManager::clearPatientDataToFetch()
+{
+    d->patientData.clear();
+}
+
+void QtDcmManager::clearSeriesDataToFetch()
+{
+    d->seriesData.clear();
+}
 void QtDcmManager::importToDirectory ( const QString &directory )
 {
     if ( this->dataToImportSize() != 0 ) {

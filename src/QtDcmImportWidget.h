@@ -37,7 +37,9 @@ public:
     void hideProgressLabel();
     void showProgressLabel();
     void setImportButtonEnabled(bool enable);
-
+    void setFetchMode();
+    void setProgressLabelMessage(const QString &msg);
+    
 public slots:
   void updateProgressBar ( int i );
 

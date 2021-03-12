@@ -234,14 +234,18 @@ bool QtDcmFindScu::doQuery ( const OFList<OFString>& overrideKeys, QtDcmFindCall
     }
 
     QtDcmFindCallback callback( level );
-    if ( findscu.performQuery ( d->manager->currentPacs().address().toUtf8().data(),
+    OFCondition cond = findscu.performQuery ( d->manager->currentPacs().address().toUtf8().data(),
                                 d->manager->currentPacs().port().toInt(),
                                 QtDcmPreferences::instance()->aetitle().toUtf8().data(),
                                 d->manager->currentPacs().aetitle().toUtf8().data(),
                                 queryRetrieveInfoModel.toStdString().c_str() , EXS_Unknown,
-                                DIMSE_BLOCKING, 0, ASC_DEFAULTMAXPDU, false, false, 1, false, -1, &keys, &callback, &fileNameList ).bad() ) {
-        QtDcmManager::instance()->displayErrorMessage ( tr ( "Cannot perform query C-FIND" ) );
+                                DIMSE_BLOCKING, 0, ASC_DEFAULTMAXPDU, false, false, 1, false, -1, &keys, &callback, &fileNameList );
+    if (cond.bad())
+    {
+        QString message = "Cannot perform query C-FIND : " + QString(cond.text());
+        QtDcmManager::instance()->displayErrorMessage ( message );
     }
+
 
     if ( findscu.dropNetwork().bad() ) {
         QtDcmManager::instance()->displayErrorMessage ( tr ( "Cannot drop network" ) );

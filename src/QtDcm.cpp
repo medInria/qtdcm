@@ -114,11 +114,11 @@ void QtDcm::initConnections()
               this,                  &QtDcm::onStudyItemClicked);
     connect ( treeWidgetSeries,      &QTreeWidget::itemClicked, 
               this,                  &QtDcm::onSerieItemClicked);
-    connect ( nameEdit,              &QLineEdit::textChanged, 
+    connect ( nameEdit,              &QLineEdit::returnPressed, 
               this,                  &QtDcm::onPatientNameTextChanged);
-    connect ( serieDescriptionEdit,  &QLineEdit::textChanged, 
+    connect ( serieDescriptionEdit,  &QLineEdit::returnPressed, 
               this,                  &QtDcm::onSerieDescriptionTextChanged);
-    connect ( studyDescriptionEdit,  &QLineEdit::textChanged, 
+    connect ( studyDescriptionEdit,  &QLineEdit::returnPressed, 
               this,                  &QtDcm::onStudyDescriptionTextChanged);
     connect ( searchButton,          &QPushButton::clicked, 
               this,                  &QtDcm::onPacsSearchButtonClicked);
@@ -176,11 +176,14 @@ void QtDcm::onPatientItemClicked ( QTreeWidgetItem * item, int column )
     treeWidgetStudies->clear();
     treeWidgetSeries->clear();
     QtDcmManager::instance()->clearDataToImport();
-
+    QtDcmManager::instance()->clearPatientDataToFetch();
+    QtDcmManager::instance()->clearSeriesDataToFetch();
     if ( d->mode == QtDcm::PACS_MODE )
     {
         for (QTreeWidgetItem *ptItem : treeWidgetPatients->selectedItems())
         {
+            QtDcmManager::instance()->addPatientDataToFetch(ptItem->text(1), ptItem->text(0), 
+                                                            ptItem->text(2), ptItem->text(3));
             QtDcmManager::instance()->findStudiesScu (ptItem->text(1), ptItem->text ( 0 ) );
             QtDcmManager::instance()->addDataToImport(ptItem->text(1), "PATIENT");
         }
@@ -203,7 +206,7 @@ void QtDcm::onStudyItemClicked(QTreeWidgetItem * item, int column )
     QtDcmManager::instance()->clearSerieInfo();
     QtDcmManager::instance()->clearPreview();
     QtDcmManager::instance()->clearDataToImport();
-    
+    QtDcmManager::instance()->clearSeriesDataToFetch();
     treeWidgetSeries->clear();
 
     if ( d->mode == QtDcm::PACS_MODE ) 
@@ -408,8 +411,10 @@ void QtDcm::openDicomdir()
     }
 }
 
-void QtDcm::onPatientNameTextChanged (const QString &pName)
+void QtDcm::onPatientNameTextChanged ()
 {
+    QString pName = nameEdit->text();
+
     if (pName.isEmpty() ) {
         QtDcmManager::instance()->setPatientName ( "" );
     }
@@ -422,8 +427,9 @@ void QtDcm::onPatientNameTextChanged (const QString &pName)
     }
 }
 
-void QtDcm::onStudyDescriptionTextChanged (const QString &description)
+void QtDcm::onStudyDescriptionTextChanged ()
 {
+    QString description = studyDescriptionEdit->text();
     if ( description.isEmpty() ) {
         QtDcmManager::instance()->setStudyDescription ( "" );
     }
@@ -442,8 +448,9 @@ void QtDcm::onStudyDescriptionTextChanged (const QString &description)
     }
 }
 
-void QtDcm::onSerieDescriptionTextChanged (const QString &description)
+void QtDcm::onSerieDescriptionTextChanged ()
 {
+    QString description = serieDescriptionEdit->text();
     if ( description.isEmpty() ) {
         QtDcmManager::instance()->setSerieDescription ( "" );
     }
