@@ -62,9 +62,9 @@ public:
     };
 
     enum eMoveStatus {
+        KO = -1,
         OK = 0,
-        PENDING,
-        KO
+        PENDING = 1,
     };
     
     static QtDcmManager* instance();

@@ -62,7 +62,6 @@ namespace {
       if (date == QDate()) {
           return "*";
       }
-      
       return date.toString("yyyyMMdd");
   }
   
@@ -110,8 +109,8 @@ public:
 
     bool useConverter;                               /** Use a converter ? */
 
-    QHash<QString, QHash<QString, QVariant>> patientData;
-    QHash<QString, QHash<QString, QVariant>> seriesData;
+    QHash<QString, QHash<QString, QVariant>> patientData; /** key : patientID => values : [patientName, birthdate, gender and the list of attached studies]*/
+    QHash<QString, QHash<QString, QVariant>> seriesData; /** key : seriesInstanceUID => values : [studyInstanceUID, seriesDescription, modality]*/
 };
 
 QtDcmManager * QtDcmManager::_instance = 0;
@@ -330,6 +329,7 @@ void QtDcmManager::foundStudy ( const QMap<QString, QString> &infosMap )
         studyItem->setText ( 2, examDate.toString ( "dd/MM/yyyy" ) );
         studyItem->setData ( 3, 0, infosMap["ID"] ); 
         
+        // for each study found, we populate d->patientData (QHash) with infos related to study then append it to the list of studies attached to the patient
         QHash<QString, QVariant> &patientEntry = d->patientData[infosMap["PatientID"]];
         if (!patientEntry.isEmpty())
         {
@@ -509,13 +509,13 @@ void QtDcmManager::onMoveRequested(const QString &uid, const QString queryLevel)
     connect ( mover, &QtDcmMoveScu::updateProgress,
                   this,  &QtDcmManager::updateProgressLevel);
     connect( mover, &QtDcmMoveScu::serieMoved, [&](const QString &path){
-        emit moveState(OK, path);
+        emit moveState(static_cast<int>(eMoveStatus::OK), path);
     });
     connect( mover, &QtDcmMoveScu::moveInProgress, [&](const QString &message){
-        emit moveState(PENDING, message);
+        emit moveState(static_cast<int>(eMoveStatus::PENDING), message);
     });
     connect( mover, &QtDcmMoveScu::moveFailed, [&](const QString &reason){
-        emit moveState(KO, reason);
+        emit moveState(static_cast<int>(eMoveStatus::KO), reason);
     });    
     connect ( mover, &QtDcmMoveScu::finished,
                 mover, &QtDcmMoveScu::deleteLater);

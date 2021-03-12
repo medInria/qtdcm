@@ -68,8 +68,6 @@ void QtDcmImportWidget::setImportButtonEnabled(bool enable)
 
 void QtDcmImportWidget::setFetchMode()
 {
-    // this->importButton->hide();
-    // this->importProgressBar->hide();
     this->fetchButton->show();
-
 }
+
