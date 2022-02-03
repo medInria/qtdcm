@@ -40,7 +40,9 @@ public:
     int networkTimeout;
 };
 
-QtDcmFindScu::QtDcmFindScu ( QObject * parent ) 
+void findPatientsScu();
+
+QtDcmFindScu::QtDcmFindScu (QObject * parent )
     : QObject(parent),
       d( new QtDcmFindScu::Private )
 {
@@ -54,6 +56,7 @@ QtDcmFindScu::~QtDcmFindScu()
     delete d;
     d = NULL;
 }
+
 
 void QtDcmFindScu::findPatientsScu (const QString &patientId, const QString &patientSex)
 {
@@ -239,7 +242,7 @@ bool QtDcmFindScu::doQuery ( const OFList<OFString>& overrideKeys, QtDcmFindCall
                                 QtDcmPreferences::instance()->aetitle().toUtf8().data(),
                                 d->manager->currentPacs().aetitle().toUtf8().data(),
                                 queryRetrieveInfoModel.toStdString().c_str() , EXS_Unknown,
-                                DIMSE_BLOCKING, 0, ASC_DEFAULTMAXPDU, false, false, 1, false, -1, &keys, &callback, &fileNameList );
+                                DIMSE_BLOCKING, 0, ASC_DEFAULTMAXPDU, false, false, 1, true, -1, &keys, &callback, &fileNameList );
     if (cond.bad())
     {
         QString message = "Cannot perform query C-FIND : " + QString(cond.text());
@@ -252,4 +255,16 @@ bool QtDcmFindScu::doQuery ( const OFList<OFString>& overrideKeys, QtDcmFindCall
     }
     
     return true;
+}
+
+void QtDcmFindScu::findPatients()
+{
+    OFList<OFString> overrideKeys;
+    overrideKeys.push_back ( ( QString ( "QueryRetrieveLevel=" ) + QString ( "" "PATIENT" "" ) ).toUtf8().data() );
+
+    //Patient level
+    overrideKeys.push_back ( QString ( "PatientID=").toUtf8().data());
+    overrideKeys.push_back ( QString ( "PatientName=").toUtf8().data());
+
+    doQuery ( overrideKeys, QtDcmFindCallback::PATIENT );
 }

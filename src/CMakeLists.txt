@@ -31,10 +31,15 @@ set(${PROJECT_NAME}_HDRS
   QtDcmStudy.h
   QtDcmPatient.h
   QtDcmServer.h
+  PluginAPHP/QtDcmInterface.h
+  PluginAPHP/QtDcmAPHP.h
+  PluginAPHP/callbacks/QtDcmCallbacks.h
 )
 
 set(${PROJECT_NAME}_SRCS
   QtDcmFindCallback.cpp
+  PluginAPHP/QtDcmAPHP.cpp
+  PluginAPHP/callbacks/QtDcmCallbacks.cpp
 )
 
 set(${PROJECT_NAME}_UIS
@@ -66,6 +71,9 @@ set(${PROJECT_NAME}_MOC_HDRS
   QtDcmPreferences.h
   QtDcmPreferencesWidget.h
   QtDcmPreferencesDialog.h
+  PluginAPHP/QtDcmInterface.h
+#  PluginAPHP/QtDcmAPHP.h
+  PluginAPHP/callbacks/QtDcmCallbacks.h
 )
 
 set(${PROJECT_NAME}_MOC_SRCS
@@ -90,6 +98,8 @@ set(${PROJECT_NAME}_MOC_SRCS
   QtDcmPreferencesWidget.cpp
   QtDcmPreferencesDialog.cpp
   QtDcmServer.cpp
+#  PluginAPHP/QtDcmAPHP.cpp
+  PluginAPHP/callbacks/QtDcmCallbacks.cpp
 )
 
 qt5_add_resources(${PROJECT_NAME}_RCC_SRCS ${${PROJECT_NAME}_RCCS})

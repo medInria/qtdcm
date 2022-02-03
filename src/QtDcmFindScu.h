@@ -41,6 +41,11 @@ public:
     void findImagesScu ( const QString & seriesUID );
     void findImageScu ( const QString & imageUID);
 
+    /* ***********************************************************************/
+    /* ********** Dedicated methods developed for APHP API *******************/
+    /* ***********************************************************************/
+
+    void findPatients();
 protected:
 
     bool doQuery(const OFList<OFString>& overrideKeys, QtDcmFindCallback::cbType level, QString queryRetrieveInfoModel = UID_FINDPatientRootQueryRetrieveInformationModel);
