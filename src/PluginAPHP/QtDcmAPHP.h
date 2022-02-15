@@ -38,23 +38,27 @@ public:
 
     QList<QMap<QString, QString>> findSeriesMinimalEntries(const QString &key) override;
 
-    int moveRequest(const QString &queryLevel, const QString &key) override;
+    bool moveRequest(int pi_requestId, const QString &queryLevel, const QString &key) override;
 
 public slots:
-    void stopMove(int request) override;
+    void stopMove(int pi_RequestId) override;
 
 private:
     static bool isServerAvailable(const QString &hostName, int port);
 
     void dcmtkPerformQuery(std::list<std::string> &keys, DcmFindSCUCallback &cb) const;
 
-    QMap<int, QtDcmMoveScu*> requestIdMap;
+private:
+
+    QMap<int, QtDcmMoveScu*> m_RequestIdMap;
+    QTemporaryDir m_TemporaryDir;
 
     enum moveStatus {
         KO = -1,
         OK = 0,
         PENDING = 1,
         };
+
 
 };
 

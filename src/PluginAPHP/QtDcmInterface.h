@@ -63,7 +63,7 @@ public:
     /* ***********************************************************************/
     /* ***************************** Move Request ****************************/
     /* ***********************************************************************/
-    virtual int moveRequest(const QString &queryLevel, const QString &key) = 0;
+    virtual bool moveRequest(int pi_requestId, const QString &queryLevel, const QString &key) = 0;
 
 signals:
     void moveProgress(int requestId, int status);
