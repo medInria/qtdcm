@@ -998,3 +998,8 @@ OFCondition QtDcmMoveScu::cmove ( T_ASC_Association * assoc, const char *fname )
 
     return cond;
 }
+
+QString QtDcmMoveScu::getOutputDir()
+{
+    return d->outputDir;
+}

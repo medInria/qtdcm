@@ -27,8 +27,8 @@
 class QtDcmAPHP : public QtDcmInterface
 {
 public:
-//    explicit QtDcmAPHP(){};
-    ~QtDcmAPHP() override;
+    QtDcmAPHP():m_port(-1){};
+    ~QtDcmAPHP();
 
     int sendEcho() override;
 
@@ -40,9 +40,13 @@ public:
 
     bool moveRequest(int pi_requestId, const QString &queryLevel, const QString &key) override;
 
+    bool isCachedDataPath(int requestId) override;
+
 public slots:
     void stopMove(int pi_RequestId) override;
 
+    void updateLocalParameters(QString const &aet, QString const &hostname, int port) override;
+    void updateRemoteParameters(QString const &aet, QString const &hostname, int port) override;
 private:
     static bool isServerAvailable(const QString &hostName, int port);
 
@@ -59,7 +63,13 @@ private:
         PENDING = 1,
         };
 
+    QString m_aetitle;
+    QString m_hostname;
+    int m_port;
+    QtDcmServer m_remoteServer;
+    int m_remoteNumber;
 
+    void updateQtdcmServerPrefs() const;
 };
 
 

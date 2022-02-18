@@ -30,9 +30,11 @@
 
 QtDcmAPHP::~QtDcmAPHP()
 {
-    delete m_net;
-    delete m_assoc;
-    delete m_params;
+    for (QtDcmMoveScu *mover : m_RequestIdMap.values())
+    {
+        delete mover;
+    }
+    m_RequestIdMap.clear();
 }
 
 int QtDcmAPHP::sendEcho()
@@ -47,11 +49,11 @@ int QtDcmAPHP::sendEcho()
     }
 
     QTcpSocket socket;
-    socket.connectToHost(m_serverHostname, m_serverPort);
+    socket.connectToHost(m_remoteServer.address(), m_remoteServer.port().toInt());
     if (!socket.waitForConnected(1000))
     {
         m_response.code = -1;
-        m_response.message = "Cannot connect to server " + m_serverHostname + " on port " + QString::number(m_serverPort) + " !";
+        m_response.message = "Cannot connect to server " + m_remoteServer.address() + " on port " + m_remoteServer.port() + " !";
 
         ASC_dropNetwork(&m_net);
         return m_response.code;
@@ -69,7 +71,7 @@ int QtDcmAPHP::sendEcho()
         return m_response.code;
     }
     // set calling and called AE titles
-    cond = ASC_setAPTitles(m_params, m_aetitle.toUtf8().data(), m_serverAet.toUtf8().data(), NULL);
+    cond = ASC_setAPTitles(m_params, m_aetitle.toUtf8().data(), m_remoteServer.aetitle().toUtf8().data(), NULL);
     if (cond.bad())
     {
         m_response.code = cond.code();
@@ -79,7 +81,7 @@ int QtDcmAPHP::sendEcho()
 
     // the DICOM server accepts connections at server.nowhere.com port 104
     cond = ASC_setPresentationAddresses(m_params, m_hostname.toUtf8().data(),
-                                                QString(m_serverHostname + ":" + QString::number(m_serverPort)).toLatin1().data());
+                                                QString(m_remoteServer.address() + ":" + m_remoteServer.port()).toLatin1().data());
     if (cond.bad())
     {
         m_response.code = cond.code();
@@ -208,17 +210,17 @@ void QtDcmAPHP::dcmtkPerformQuery(std::list<std::string> &keys, DcmFindSCUCallba
     OFList<OFString> fileNameList;
     DcmFindSCU findscu;
 
-    if (isServerAvailable(m_hostname, m_serverPort))
+    if (isServerAvailable(m_remoteServer.address(), m_remoteServer.port().toInt()))
     {
         if ( findscu.initializeNetwork ( 30 ).good() )
         {
 
             QString queryInfoModel = UID_FINDPatientRootQueryRetrieveInformationModel;
 
-            OFCondition cond = findscu.performQuery (m_hostname.toUtf8().data(),
-                                                     m_serverPort,
+            OFCondition cond = findscu.performQuery (m_remoteServer.address().toUtf8().data(),
+                                                     m_remoteServer.port().toInt(),
                                                      m_aetitle.toUtf8().data(),
-                                                     m_serverAet.toUtf8().data(),
+                                                     m_remoteServer.aetitle().toUtf8().data(),
                                                      queryInfoModel.toStdString().c_str() ,
                                                      EXS_Unknown, DIMSE_BLOCKING,
                                                      0, ASC_DEFAULTMAXPDU,
@@ -261,13 +263,14 @@ bool QtDcmAPHP::moveRequest(int pi_requestId, const QString &queryLevel, const Q
     bool bRes = false;
     QStringList data(key);
     QString outputDir;
-    QtDcmManager::instance()->setCurrentPacs(0);
+
+    // WARN : It is a  hack to be able to use QtDcmMoveSCu class without modification
+    QtDcmManager::instance()->setCurrentPacs(m_remoteNumber);
 
     if (m_TemporaryDir.isValid())
     {
         auto mover = new QtDcmMoveScu ( );
         QDir dir(m_TemporaryDir.path());
-        dir.mkdir(  QString::number(pi_requestId));
 
         mover->setOutputDir ( dir.path() );
         mover->setData ( data );
@@ -278,7 +281,7 @@ bool QtDcmAPHP::moveRequest(int pi_requestId, const QString &queryLevel, const Q
 
         m_RequestIdMap[pi_requestId] = mover;
 
-        QObject::connect( mover, &QtDcmMoveScu::serieMoved, [&](const QString &path, const QString &serieUid, int number){
+        QObject::connect( mover, &QtDcmMoveScu::serieMoved, [=](const QString &path, const QString &serieUid, int number){
             emit moveProgress(pi_requestId, static_cast<int>(moveStatus::OK));
             emit pathToData(pi_requestId, path);
         });
@@ -297,13 +300,71 @@ bool QtDcmAPHP::moveRequest(int pi_requestId, const QString &queryLevel, const Q
     return bRes;
 }
 
+bool QtDcmAPHP::isCachedDataPath(int requestId)
+{
+    bool bRes = false;
+    auto mover = m_RequestIdMap[requestId];
+    QString path = mover->getOutputDir();
+    if (mover && (!path.isEmpty()))
+    {
+        bRes = true;
+        // TODO move signal emission ?
+        emit pathToData(requestId, path);
+    }
+    return bRes;
+}
+
+
+
 void QtDcmAPHP::stopMove(int pi_RequestId)
 {
     if (m_RequestIdMap.contains(pi_RequestId))
     {
         auto mover = m_RequestIdMap[pi_RequestId];
         mover->onStopMove();
+        m_RequestIdMap.remove(pi_RequestId);
+        delete mover;
     }
 }
 
+void QtDcmAPHP::updateLocalParameters(const QString &aet, const QString &hostname, int port)
+{
+    m_aetitle = aet;
+    QtDcmPreferences::instance()->setAetitle ( m_aetitle );
+    m_hostname = hostname;
+    QtDcmPreferences::instance()->setHostname ( m_hostname );
+    m_port = port;
+    QtDcmPreferences::instance()->setPort ( QString::number(m_port) );
+}
+
+void QtDcmAPHP::updateRemoteParameters(const QString &aet, const QString &hostname, int port)
+{
+    QtDcmPreferences *prefs = QtDcmPreferences::instance();
+    bool alreadyRegistered = false;
+    for (const auto& ser : prefs->servers())
+    {
+        if (ser.port()==QString::number(port) &&
+        ser.aetitle()==aet &&
+        ser.name()==aet &&
+        ser.address()==hostname)
+        {
+            alreadyRegistered = true;
+            break;
+        }
+    }
+    if (!alreadyRegistered)
+    {
+        m_remoteServer.setName(aet);
+        m_remoteServer.setAetitle(aet);
+        m_remoteServer.setPort(QString::number(port));
+        m_remoteServer.setAddress(hostname);
+        m_remoteNumber = prefs->servers().size();
+        prefs->addServer(m_remoteServer);
+
+    }
+    for (const auto &server : prefs->servers())
+    {
+        qDebug()<<"server : "<<server.aetitle()<<" , "<<server.address()<<" , "<<server.port();
+    }
+}
 

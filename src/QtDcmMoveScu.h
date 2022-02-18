@@ -94,6 +94,7 @@ public:
 
     void run();
 
+    QString getOutputDir();
 public slots:
     void onStopMove();
     
