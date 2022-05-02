@@ -30,10 +30,6 @@
 
 QtDcmAPHP::~QtDcmAPHP()
 {
-    for (QtDcmMoveScu *mover : m_RequestIdMap.values())
-    {
-        delete mover;
-    }
     m_RequestIdMap.clear();
 }
 
@@ -139,69 +135,106 @@ int QtDcmAPHP::sendEcho()
     return m_response.code;
 }
 
-QList<QMap<QString, QString>> QtDcmAPHP::findPatientMinimalEntries()
+QList<QMap<QString, QString>> QtDcmAPHP::findPatientMinimalEntries(const QMap<QString, QString> &filters)
 {
-    QList<QMap<QString, QString>> entries;
-
     OFList<OFString> keys;
     keys.emplace_back(( QString ( "QueryRetrieveLevel=" ) + QString ( "" "PATIENT" "" ) ).toUtf8().data() );
     //Patient level
-    keys.emplace_back(QString ( "PatientID=").toUtf8().data());
-    keys.emplace_back(QString ( "PatientName=").toUtf8().data());
-
+    if (filters.contains("PatientID"))
+    {
+        keys.emplace_back((QString ( "PatientID=" ) + filters["PatientID"]).toUtf8().data() );
+    }
+    else
+    {
+        keys.emplace_back(QString ( "PatientID=").toUtf8().data());
+    }
+    if (filters.contains("PatientName"))
+    {
+        keys.emplace_back((QString ( "PatientName=" ) + filters["PatientName"]).toUtf8().data() );
+    }
+    else
+    {
+        keys.emplace_back(QString ( "PatientName=").toUtf8().data());
+    }
+    if (filters.contains("PatientSex"))
+    {
+        keys.emplace_back((QString ( "PatientSex=" ) + filters["PatientSex"]).toUtf8().data() );
+    }
+    else
+    {
+        keys.emplace_back(QString ( "PatientSex=").toUtf8().data());
+    }
+    
     FindPatientCallback cb;
-    QObject::connect(&cb, &FindPatientCallback::patientFinded, [&entries](const QMap<QString, QString> &infos){
-        entries.append(infos);
-    });
 
     dcmtkPerformQuery(keys, cb);
 
-    return entries;
+    return cb.m_patientsList;
 }
 
 QList<QMap<QString, QString>>
-QtDcmAPHP::findStudyMinimalEntries(const QString &patientID)
+QtDcmAPHP::findStudyMinimalEntries(const QString &patientID, const QMap<QString, QString> &filters)
 {
-    QList<QMap<QString, QString>> entries;
-
     OFList<OFString> keys;
     keys.emplace_back(( QString ( "QueryRetrieveLevel=" ) + QString ( "" "STUDY" "" ) ).toUtf8().data() );
 
     keys.emplace_back((QString ( "PatientID=" ) + patientID).toUtf8().data() );
 
-    keys.emplace_back(QString ( "StudyDescription").toUtf8().data() );
+    if (filters.contains("StudyDescription"))
+    {
+        keys.emplace_back((QString ( "StudyDescription=" ) + filters["StudyDescription"]).toUtf8().data() );
+    }
+    else
+    {
+        keys.emplace_back(QString ( "StudyDescription=").toUtf8().data());
+    }
+    if (filters.contains("StudyDate"))
+    {
+        keys.emplace_back((QString ( "StudyDate=" ) + filters["StudyDate"]).toUtf8().data() );
+    }
+    else
+    {
+        keys.emplace_back(QString ( "StudyDate=").toUtf8().data());
+    }
     keys.emplace_back(QString ( "StudyInstanceUID" ).toUtf8().data() );
 
     FindStudyCallback cb;
-    QObject::connect(&cb, &FindStudyCallback::studyFinded, [&entries](const QMap<QString, QString> &infos){
-        entries.append(infos);
-    });
 
     dcmtkPerformQuery(keys, cb);
 
-    return entries;
+    return cb.m_studiesList;
 }
 
-QList<QMap<QString, QString>> QtDcmAPHP::findSeriesMinimalEntries(const QString &studyInstanceUID)
+QList<QMap<QString, QString>> QtDcmAPHP::findSeriesMinimalEntries(const QString &studyInstanceUID, const QMap<QString, QString> &filters)
 {
-    QList<QMap<QString, QString>> entries;
-
     OFList<OFString> keys;
     keys.emplace_back(( QString ( "QueryRetrieveLevel=" ) + QString ( "" "SERIES" "" ) ).toUtf8().data() );
 
     keys.emplace_back((QString ( "StudyInstanceUID=" ) + studyInstanceUID).toUtf8().data() );
 
-    keys.emplace_back(QString ( "SeriesDescription").toUtf8().data() );
-    keys.emplace_back(QString ( "SeriesInstanceUID").toUtf8().data() );
+    if (filters.contains("SeriesDescription"))
+    {
+        keys.emplace_back((QString ( "SeriesDescription=" ) + filters["SeriesDescription"]).toUtf8().data() );
+    }
+    else
+    {
+        keys.emplace_back(QString ( "SeriesDescription=").toUtf8().data());
+    }
+    if (filters.contains("Modality"))
+    {
+        keys.emplace_back((QString ( "Modality=" ) + filters["Modality"]).toUtf8().data() );
+    }
+    else
+    {
+        keys.emplace_back(QString ( "Modality=").toUtf8().data());
+    }
+    keys.emplace_back(QString ( "SeriesInstanceUID=").toUtf8().data() );
 
     FindSeriesCallback cb;
-    QObject::connect(&cb, &FindSeriesCallback::seriesFinded, [&entries](const QMap<QString, QString> &infos){
-        entries.append(infos);
-    });
 
     dcmtkPerformQuery(keys, cb);
 
-    return entries;
+    return cb.m_seriesList;
 }
 
 void QtDcmAPHP::dcmtkPerformQuery(std::list<std::string> &keys, DcmFindSCUCallback &cb) const

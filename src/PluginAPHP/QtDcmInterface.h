@@ -31,11 +31,11 @@ public:
     /* ***********************************************************************/
     /* ***************************** Find Request ****************************/
     /* ***********************************************************************/
-    virtual QList<QMap<QString, QString>> findPatientMinimalEntries() = 0;
+    virtual QList<QMap<QString, QString>> findPatientMinimalEntries(const QMap<QString, QString> &filters = QMap<QString, QString>()) = 0;
 
-    virtual QList<QMap<QString, QString>> findStudyMinimalEntries(const QString &key) = 0;
+    virtual QList<QMap<QString, QString>> findStudyMinimalEntries(const QString &key, const QMap<QString, QString> &filters = QMap<QString, QString>()) = 0;
 
-    virtual QList<QMap<QString, QString>> findSeriesMinimalEntries(const QString &key) = 0;
+    virtual QList<QMap<QString, QString>> findSeriesMinimalEntries(const QString &key, const QMap<QString, QString> &filters = QMap<QString, QString>()) = 0;
 
     /* ***********************************************************************/
     /* ***************************** Move Request ****************************/

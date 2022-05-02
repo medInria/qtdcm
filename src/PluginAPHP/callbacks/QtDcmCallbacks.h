@@ -21,6 +21,8 @@
 
 #include <dcmtk/dcmnet/dfindscu.h>
 #include <QObject>
+#include <QList>
+#include <QMap>
 
 class FindPatientCallback : public QObject, public DcmFindSCUCallback
 {
@@ -28,8 +30,8 @@ class FindPatientCallback : public QObject, public DcmFindSCUCallback
 public:
     void callback ( T_DIMSE_C_FindRQ *request, int responseCount, T_DIMSE_C_FindRSP *rsp, DcmDataset *responseIdentifiers ) override;
 
-signals:
-    void patientFinded(const QMap<QString, QString>&);
+public:
+    QList<QMap<QString, QString>> m_patientsList;
 };
 
 class FindStudyCallback : public QObject, public DcmFindSCUCallback
@@ -38,8 +40,8 @@ class FindStudyCallback : public QObject, public DcmFindSCUCallback
 public:
     void callback ( T_DIMSE_C_FindRQ *request, int responseCount, T_DIMSE_C_FindRSP *rsp, DcmDataset *responseIdentifiers ) override;
 
-signals:
-    void studyFinded(const QMap<QString, QString>&);
+public:
+    QList<QMap<QString, QString>> m_studiesList;
 };
 
 class FindSeriesCallback : public QObject, public DcmFindSCUCallback
@@ -48,6 +50,6 @@ class FindSeriesCallback : public QObject, public DcmFindSCUCallback
 public:
     void callback ( T_DIMSE_C_FindRQ *request, int responseCount, T_DIMSE_C_FindRSP *rsp, DcmDataset *responseIdentifiers ) override;
 
-signals:
-    void seriesFinded(const QMap<QString, QString>&);
+public:
+    QList<QMap<QString, QString>> m_seriesList;
 };
