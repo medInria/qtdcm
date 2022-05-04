@@ -23,24 +23,44 @@
 #include <QTcpSocket>
 
 #include <dcmtk/dcmnet/dimse.h>
+#include <dcmtk/dcmnet/dfindscu.h>
+
 #include <memory>
 #include <PluginAPHP/callbacks/QtDcmCallbacks.h>
 #include <QtDcmManager.h>
+#include <QtDcmMoveScu.h>
 
+class QtDcmAPHPPrivate
+{
+public:
+	T_ASC_Network *net; // network struct, contains DICOM upper layer FSM etc.
+	T_ASC_Parameters *params; // parameters of association request
+	T_ASC_Association *assoc;
+	QMap<int, QtDcmMoveScu*> requestIdMap;
+
+};
+
+QtDcmAPHP::QtDcmAPHP() : m_port(-1)
+{
+	d = new QtDcmAPHPPrivate;
+	d->net = nullptr; // network struct, contains DICOM upper layer FSM etc.
+	d->params = nullptr; // parameters of association request
+	d->assoc = nullptr;
+}
 
 QtDcmAPHP::~QtDcmAPHP()
 {
-    m_RequestIdMap.clear();
+	delete d;
 }
 
 int QtDcmAPHP::sendEcho()
 {
 
-    OFCondition cond = ASC_initializeNetwork ( NET_REQUESTOR, 0, 30 /* timeout */, &m_net );
+    OFCondition cond = ASC_initializeNetwork ( NET_REQUESTOR, 0, 30 /* timeout */, &d->net );
     if ( cond != EC_Normal ) {
         m_response.code = cond.code();
         m_response.message = "Cannot initialize network : " + QString(cond.text());
-        ASC_dropNetwork ( &m_net );
+        ASC_dropNetwork ( &d->net );
         return m_response.code;
     }
 
@@ -51,7 +71,7 @@ int QtDcmAPHP::sendEcho()
         m_response.code = -1;
         m_response.message = "Cannot connect to server " + m_remoteServer.address() + " on port " + m_remoteServer.port() + " !";
 
-        ASC_dropNetwork(&m_net);
+        ASC_dropNetwork(&d->net);
         return m_response.code;
     }
 
@@ -59,7 +79,7 @@ int QtDcmAPHP::sendEcho()
 
 
 
-    cond = ASC_createAssociationParameters(&m_params, ASC_DEFAULTMAXPDU);
+    cond = ASC_createAssociationParameters(&d->params, ASC_DEFAULTMAXPDU);
     if (cond.bad())
     {
         m_response.code = cond.code();
@@ -67,7 +87,7 @@ int QtDcmAPHP::sendEcho()
         return m_response.code;
     }
     // set calling and called AE titles
-    cond = ASC_setAPTitles(m_params, m_aetitle.toUtf8().data(), m_remoteServer.aetitle().toUtf8().data(), NULL);
+    cond = ASC_setAPTitles(d->params, m_aetitle.toUtf8().data(), m_remoteServer.aetitle().toUtf8().data(), NULL);
     if (cond.bad())
     {
         m_response.code = cond.code();
@@ -76,7 +96,7 @@ int QtDcmAPHP::sendEcho()
     }
 
     // the DICOM server accepts connections at server.nowhere.com port 104
-    cond = ASC_setPresentationAddresses(m_params, m_hostname.toUtf8().data(),
+    cond = ASC_setPresentationAddresses(d->params, m_hostname.toUtf8().data(),
                                                 QString(m_remoteServer.address() + ":" + m_remoteServer.port()).toLatin1().data());
     if (cond.bad())
     {
@@ -89,7 +109,7 @@ int QtDcmAPHP::sendEcho()
     const char *ts[] = {UID_LittleEndianImplicitTransferSyntax};
 
     // add presentation context to association request
-    cond = ASC_addPresentationContext(m_params, 1, UID_VerificationSOPClass, ts, 1);
+    cond = ASC_addPresentationContext(d->params, 1, UID_VerificationSOPClass, ts, 1);
     if (cond.bad())
     {
         m_response.code = cond.code();
@@ -98,16 +118,16 @@ int QtDcmAPHP::sendEcho()
     }
 
     // request DICOM association
-    if (ASC_requestAssociation(m_net, m_params, &m_assoc).good())
+    if (ASC_requestAssociation(d->net, d->params, &d->assoc).good())
     {
-        if (ASC_countAcceptedPresentationContexts(m_params) == 1)
+        if (ASC_countAcceptedPresentationContexts(d->params) == 1)
         {
             // the remote SCP has accepted the Verification Service Class
-            DIC_US id = m_assoc->nextMsgID++; // generate next message ID
+            DIC_US id = d->assoc->nextMsgID++; // generate next message ID
             DIC_US status; // DIMSE status of C-ECHO-RSP will be stored here
             DcmDataset *sd = NULL; // status detail will be stored here
             // send C-ECHO-RQ and handle response
-            DIMSE_echoUser(m_assoc, id, DIMSE_BLOCKING, 0, &status, &sd);
+            DIMSE_echoUser(d->assoc, id, DIMSE_BLOCKING, 0, &status, &sd);
             delete sd; // we don't care about status detail
 
             m_response.code = 0;
@@ -125,12 +145,12 @@ int QtDcmAPHP::sendEcho()
         m_response.message = "Wrong dicom association, echo request failed";
     }
 
-    ASC_releaseAssociation(m_assoc); // release association
-    ASC_destroyAssociation(&m_assoc); // delete assoc structure
-    ASC_dropNetwork(&m_net); // delete net structure
+    ASC_releaseAssociation(d->assoc); // release association
+    ASC_destroyAssociation(&d->assoc); // delete assoc structure
+    ASC_dropNetwork(&d->net); // delete net structure
 
-    m_net = nullptr;
-    m_assoc = nullptr;
+    d->net = nullptr;
+    d->assoc = nullptr;
 
     return m_response.code;
 }
@@ -164,12 +184,8 @@ QList<QMap<QString, QString>> QtDcmAPHP::findPatientMinimalEntries(const QMap<QS
     {
         keys.emplace_back(QString ( "PatientSex=").toUtf8().data());
     }
-    
-    FindPatientCallback cb;
 
-    dcmtkPerformQuery(keys, cb);
-
-    return cb.m_patientsList;
+    return dcmtkPerformQuery(keys, 0);
 }
 
 QList<QMap<QString, QString>>
@@ -198,11 +214,7 @@ QtDcmAPHP::findStudyMinimalEntries(const QString &patientID, const QMap<QString,
     }
     keys.emplace_back(QString ( "StudyInstanceUID" ).toUtf8().data() );
 
-    FindStudyCallback cb;
-
-    dcmtkPerformQuery(keys, cb);
-
-    return cb.m_studiesList;
+    return dcmtkPerformQuery(keys, 1);
 }
 
 QList<QMap<QString, QString>> QtDcmAPHP::findSeriesMinimalEntries(const QString &studyInstanceUID, const QMap<QString, QString> &filters)
@@ -230,18 +242,24 @@ QList<QMap<QString, QString>> QtDcmAPHP::findSeriesMinimalEntries(const QString 
     }
     keys.emplace_back(QString ( "SeriesInstanceUID=").toUtf8().data() );
 
-    FindSeriesCallback cb;
-
-    dcmtkPerformQuery(keys, cb);
-
-    return cb.m_seriesList;
+    return dcmtkPerformQuery(keys, 2);
 }
 
-void QtDcmAPHP::dcmtkPerformQuery(std::list<std::string> &keys, DcmFindSCUCallback &cb) const
+QList<QMap<QString, QString>> QtDcmAPHP::dcmtkPerformQuery(std::list<std::string> &keys, int level ) const
 {
+	QList<QMap<QString, QString>> res;
+
     //Image level
     OFList<OFString> fileNameList;
     DcmFindSCU findscu;
+	DcmFindSCUCallback *cb = nullptr;
+	switch (level)
+	{
+	case 0: cb = new FindPatientCallback; break;
+	case 1: cb = new FindStudyCallback; break;
+	case 2: cb = new FindSeriesCallback; break;
+	default: break;
+	}
 
     if (isServerAvailable(m_remoteServer.address(), m_remoteServer.port().toInt()))
     {
@@ -259,7 +277,7 @@ void QtDcmAPHP::dcmtkPerformQuery(std::list<std::string> &keys, DcmFindSCUCallba
                                                      0, ASC_DEFAULTMAXPDU,
                                                      false, false,
                                                      1, false, -1, &keys,
-                                                     &cb, &fileNameList );
+                                                     cb, &fileNameList );
 
             if (cond.good())
             {
@@ -276,6 +294,15 @@ void QtDcmAPHP::dcmtkPerformQuery(std::list<std::string> &keys, DcmFindSCUCallba
             }
         }
     }
+	switch (level)
+	{
+	case 0: res = static_cast<FindPatientCallback*>(cb)->m_patientsList; break;
+	case 1: res = static_cast<FindStudyCallback  *>(cb)->m_studiesList; break;
+	case 2: res = static_cast<FindSeriesCallback *>(cb)->m_seriesList; break;
+	default: break;
+	}
+
+	return res;
 }
 
 bool QtDcmAPHP::isServerAvailable(const QString &hostName, const int port)
@@ -312,7 +339,7 @@ bool QtDcmAPHP::moveRequest(int pi_requestId, const QString &queryLevel, const Q
         QObject::connect ( mover, &QtDcmMoveScu::finished,
                   mover, &QtDcmMoveScu::deleteLater);
 
-        m_RequestIdMap[pi_requestId] = mover;
+        d->requestIdMap[pi_requestId] = mover;
 
         QObject::connect( mover, &QtDcmMoveScu::serieMoved, [=](const QString &path, const QString &serieUid, int number){
             emit moveProgress(pi_requestId, static_cast<int>(moveStatus::OK));
@@ -336,7 +363,7 @@ bool QtDcmAPHP::moveRequest(int pi_requestId, const QString &queryLevel, const Q
 bool QtDcmAPHP::isCachedDataPath(int requestId)
 {
     bool bRes = false;
-    auto mover = m_RequestIdMap[requestId];
+    auto mover = d->requestIdMap[requestId];
     QString path = mover->getOutputDir();
     if (mover && (!path.isEmpty()))
     {
@@ -351,11 +378,11 @@ bool QtDcmAPHP::isCachedDataPath(int requestId)
 
 void QtDcmAPHP::stopMove(int pi_RequestId)
 {
-    if (m_RequestIdMap.contains(pi_RequestId))
+    if (d->requestIdMap.contains(pi_RequestId))
     {
-        auto mover = m_RequestIdMap[pi_RequestId];
+        auto mover = d->requestIdMap[pi_RequestId];
         mover->onStopMove();
-        m_RequestIdMap.remove(pi_RequestId);
+		d->requestIdMap.remove(pi_RequestId);
         delete mover;
     }
 }

@@ -21,14 +21,17 @@
 #ifndef QTDCM_QTDCMAPHP_H
 #define QTDCM_QTDCMAPHP_H
 
-#include <QtDcmMoveScu.h>
-#include "QtDcmInterface.h"
 
-class QtDcmAPHP : public QtDcmInterface
+#include "QtDcmInterface.h"
+#include <QtDcmPreferences.h>
+
+class QtDcmAPHPPrivate;
+
+class QTDCM_EXPORT QtDcmAPHP : public QtDcmInterface
 {
 public:
-    QtDcmAPHP():m_port(-1){};
-    ~QtDcmAPHP();
+    QtDcmAPHP();
+    virtual ~QtDcmAPHP();
 
     int sendEcho() override;
 
@@ -48,13 +51,13 @@ public slots:
     void updateLocalParameters(QString const &aet, QString const &hostname, int port) override;
     void updateRemoteParameters(QString const &aet, QString const &hostname, int port) override;
 private:
-    static bool isServerAvailable(const QString &hostName, int port);
+	QList<QMap<QString, QString>> dcmtkPerformQuery(std::list<std::string> &keys, int level) const;
+	static bool isServerAvailable(const QString &hostName, int port);
 
-    void dcmtkPerformQuery(std::list<std::string> &keys, DcmFindSCUCallback &cb) const;
+    
 
 private:
 
-    QMap<int, QtDcmMoveScu*> m_RequestIdMap;
     QTemporaryDir m_TemporaryDir;
 
     enum moveStatus {
@@ -70,8 +73,9 @@ private:
     int m_remoteNumber;
 
     void updateQtdcmServerPrefs() const;
+
+protected:
+	QtDcmAPHPPrivate *d;
 };
-
-
 
 #endif //QTDCM_QTDCMAPHP_H
