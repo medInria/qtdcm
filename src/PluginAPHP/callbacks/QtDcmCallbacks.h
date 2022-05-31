@@ -24,32 +24,16 @@
 #include <QList>
 #include <QMap>
 
-class FindPatientCallback : public QObject, public DcmFindSCUCallback
+class FindCallback : public QObject, public DcmFindSCUCallback
 {
     Q_OBJECT
 public:
+    FindCallback(){};
+    FindCallback(QMap<DcmTagKey, QString> tags);
     void callback ( T_DIMSE_C_FindRQ *request, int responseCount, T_DIMSE_C_FindRSP *rsp, DcmDataset *responseIdentifiers ) override;
 
 public:
-    QList<QMap<QString, QString>> m_patientsList;
+    QList<QMap<DcmTagKey, QString>> m_List;
+    QMap<DcmTagKey, QString> m_tags;
 };
 
-class FindStudyCallback : public QObject, public DcmFindSCUCallback
-{
-    Q_OBJECT
-public:
-    void callback ( T_DIMSE_C_FindRQ *request, int responseCount, T_DIMSE_C_FindRSP *rsp, DcmDataset *responseIdentifiers ) override;
-
-public:
-    QList<QMap<QString, QString>> m_studiesList;
-};
-
-class FindSeriesCallback : public QObject, public DcmFindSCUCallback
-{
-    Q_OBJECT
-public:
-    void callback ( T_DIMSE_C_FindRQ *request, int responseCount, T_DIMSE_C_FindRSP *rsp, DcmDataset *responseIdentifiers ) override;
-
-public:
-    QList<QMap<QString, QString>> m_seriesList;
-};

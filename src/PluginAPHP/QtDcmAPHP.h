@@ -32,12 +32,8 @@ public:
 
     int sendEcho() override;
 
-    QList<QMap<QString, QString>> findPatientMinimalEntries(const QMap<QString, QString> &filters = QMap<QString, QString>()) override;
-
-    QList<QMap<QString, QString>> findStudyMinimalEntries(const QString &patientID, const QMap<QString, QString> &filters = QMap<QString, QString>()) override;
-
-    QList<QMap<QString, QString>> findSeriesMinimalEntries(const QString &key, const QMap<QString, QString> &filters = QMap<QString, QString>()) override;
-
+    QList<QMap<DcmTagKey, QString>> cFind(const QMap<DcmTagKey, QString> &filters) override;
+    
     bool moveRequest(int pi_requestId, const QString &queryLevel, const QString &key) override;
 
     bool isCachedDataPath(int requestId) override;

@@ -22,68 +22,26 @@
 
 #include <dcmtk/dcmdata/dcdeftag.h>
 
-void FindPatientCallback::callback (T_DIMSE_C_FindRQ *request, int responseCount, T_DIMSE_C_FindRSP *rsp, DcmDataset *responseIdentifiers )
+FindCallback::FindCallback(QMap<DcmTagKey, QString> tags)
+{
+    m_tags = tags;
+}
+
+void FindCallback::callback (T_DIMSE_C_FindRQ *request, int responseCount, T_DIMSE_C_FindRSP *rsp, DcmDataset *responseIdentifiers )
 {
     Q_UNUSED(request)
     Q_UNUSED(responseCount)
     Q_UNUSED(rsp)
 
-    QMap<QString, QString> infosMap;
+    QMap<DcmTagKey, QString> infosMap;
 
     OFString info;
+    for (DcmTagKey tag : m_tags.keys())
+    {
+        responseIdentifiers->findAndGetOFString(tag, info);
+        infosMap.insert(tag, QString(info.c_str()));
+    }
 
-    responseIdentifiers->findAndGetOFString ( DCM_PatientName, info );
-    infosMap.insert ( "Name", QString ( info.c_str() ) );
-    responseIdentifiers->findAndGetOFString ( DCM_PatientID, info );
-    infosMap.insert ( "ID", QString ( info.c_str() ) );
-    responseIdentifiers->findAndGetOFString( DCM_PatientSex, info);
-    infosMap.insert ( "Sex", QString( info.c_str()));
-    m_patientsList.append(infosMap);
+    m_List.append(infosMap);
 }
 
-void FindStudyCallback::callback (T_DIMSE_C_FindRQ *request, int responseCount, T_DIMSE_C_FindRSP *rsp, DcmDataset *responseIdentifiers )
-{
-    Q_UNUSED(request)
-    Q_UNUSED(responseCount)
-    Q_UNUSED(rsp)
-
-    QMap<QString, QString> infosMap;
-
-    OFString info;
-
-    responseIdentifiers->findAndGetOFString ( DCM_StudyDescription, info );
-    infosMap.insert ( "Description", QString ( info.c_str() ) );
-    responseIdentifiers->findAndGetOFString ( DCM_StudyInstanceUID, info );
-    infosMap.insert ( "StudyInstanceUID", QString ( info.c_str() ) );
-    responseIdentifiers->findAndGetOFString( DCM_StudyDate, info);
-    infosMap.insert( "StudyDate", QString( info.c_str()));
-
-    responseIdentifiers->findAndGetOFString( DCM_PatientID, info);
-    infosMap.insert( "PatientID", QString( info.c_str()));
-
-    m_studiesList.append(infosMap);
-}
-
-void FindSeriesCallback::callback(T_DIMSE_C_FindRQ *request, int responseCount, T_DIMSE_C_FindRSP *rsp,
-                                  DcmDataset *responseIdentifiers)
-{
-    Q_UNUSED(request)
-    Q_UNUSED(responseCount)
-    Q_UNUSED(rsp)
-
-    QMap<QString, QString> infosMap;
-
-    OFString info;
-
-    responseIdentifiers->findAndGetOFString ( DCM_SeriesDescription, info );
-    infosMap.insert ( "Description", QString ( info.c_str() ) );
-    responseIdentifiers->findAndGetOFString ( DCM_SeriesInstanceUID, info );
-    infosMap.insert ( "SeriesInstanceUID", QString ( info.c_str() ) );
-    responseIdentifiers->findAndGetOFString ( DCM_Modality, info );
-    infosMap.insert ( "Modality", QString ( info.c_str() ) );
-
-    responseIdentifiers->findAndGetOFString( DCM_StudyInstanceUID, info);
-    infosMap.insert( "StudyInstanceUID", QString(info.c_str()));
-
-    m_seriesList.append(infosMap);
-}
