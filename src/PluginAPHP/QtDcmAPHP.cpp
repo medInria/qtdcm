@@ -229,8 +229,7 @@ bool QtDcmAPHP::moveRequest(int pi_requestId, const QString &queryLevel, const Q
         m_RequestIdMap[pi_requestId] = mover;
 
         QObject::connect( mover, &QtDcmMoveScu::serieMoved, [=](const QString &path, const QString &serieUid, int number){
-            emit moveProgress(pi_requestId, static_cast<int>(moveStatus::OK));
-            emit pathToData(pi_requestId, path);
+            emit moveProgress(pi_requestId, static_cast<int>(moveStatus::OK), path);
         });
 
         QObject::connect( mover, &QtDcmMoveScu::moveInProgress, [=](const QString &message){
@@ -256,7 +255,7 @@ bool QtDcmAPHP::isCachedDataPath(int requestId)
     {
         bRes = true;
         // TODO move signal emission ?
-        emit pathToData(requestId, path);
+        emit moveProgress(requestId, static_cast<int>(moveStatus::OK), path);
     }
     return bRes;
 }

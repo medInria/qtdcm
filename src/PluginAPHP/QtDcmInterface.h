@@ -40,8 +40,7 @@ public:
 
     virtual bool isCachedDataPath(int requestId) = 0;
 signals:
-    void moveProgress(int requestId, int status);
-    void pathToData(int requestId, const QString &path);
+    void moveProgress(int requestId, int status, QString path = "");
 
 public slots:
     virtual void stopMove(int requestId) = 0;
