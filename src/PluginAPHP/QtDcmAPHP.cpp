@@ -27,9 +27,21 @@
 #include <PluginAPHP/callbacks/QtDcmCallbacks.h>
 #include <QtDcmManager.h>
 
+QtDcmAPHP::QtDcmAPHP():m_port(-1)
+{
+    m_FifoMover = new QtDcmFifoMover;
+    m_FifoMover->moveToThread(&m_Thread);
+    connect(&m_Thread, &QThread::finished, m_FifoMover, &QObject::deleteLater);
+    connect(&m_Thread, &QThread::started, m_FifoMover, &QtDcmFifoMover::processing);
+    connect(m_FifoMover, SIGNAL(sendPending(const int, const int)), this, SIGNAL(moveProgress(int, int, QString)));
+    m_Thread.start();
+}
 
 QtDcmAPHP::~QtDcmAPHP()
 {
+    m_FifoMover->stopProcessing();
+    m_Thread.quit();
+    m_Thread.wait();
     m_RequestIdMap.clear();
 }
 
@@ -223,8 +235,8 @@ bool QtDcmAPHP::moveRequest(int pi_requestId, const QString &queryLevel, const Q
         mover->setData ( data );
         mover->setImportDir ( outputDir );
         mover->setQueryLevel( queryLevel );
-        QObject::connect ( mover, &QtDcmMoveScu::finished,
-                  mover, &QtDcmMoveScu::deleteLater);
+//        QObject::connect ( mover, &QtDcmMoveScu::finished,
+//                  mover, &QtDcmMoveScu::deleteLater);
 
         m_RequestIdMap[pi_requestId] = mover;
 
@@ -240,10 +252,17 @@ bool QtDcmAPHP::moveRequest(int pi_requestId, const QString &queryLevel, const Q
             emit moveProgress(pi_requestId, static_cast<int>(moveStatus::KO));
         });
 
-        mover->start();
+        m_FifoMover->addRequest(pi_requestId, mover);
+//        emit requestAddedToFifo(pi_requestId, mover);
+//        mover->start();
         bRes = true;
     }
     return bRes;
+}
+
+void QtDcmAPHP::sendPending(int requestId)
+{
+    emit moveProgress(requestId, static_cast<int>(moveStatus::PENDING));
 }
 
 bool QtDcmAPHP::isCachedDataPath(int requestId)
@@ -313,4 +332,5 @@ void QtDcmAPHP::updateRemoteParameters(const QString &aet, const QString &hostna
         qDebug()<<"server : "<<server.aetitle()<<" , "<<server.address()<<" , "<<server.port();
     }
 }
+
 

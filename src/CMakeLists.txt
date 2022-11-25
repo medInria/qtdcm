@@ -33,12 +33,14 @@ set(${PROJECT_NAME}_HDRS
   QtDcmServer.h
   PluginAPHP/QtDcmInterface.h
   PluginAPHP/QtDcmAPHP.h
+  PluginAPHP/QtDcmFifoMover.h
   PluginAPHP/callbacks/QtDcmCallbacks.h
 )
 
 set(${PROJECT_NAME}_SRCS
   QtDcmFindCallback.cpp
   PluginAPHP/QtDcmAPHP.cpp
+  PluginAPHP/QtDcmFifoMover.cpp
   PluginAPHP/callbacks/QtDcmCallbacks.cpp
 )
 
@@ -72,7 +74,7 @@ set(${PROJECT_NAME}_MOC_HDRS
   QtDcmPreferencesWidget.h
   QtDcmPreferencesDialog.h
   PluginAPHP/QtDcmInterface.h
-#  PluginAPHP/QtDcmAPHP.h
+  PluginAPHP/QtDcmFifoMover.h
   PluginAPHP/callbacks/QtDcmCallbacks.h
 )
 
@@ -98,7 +100,7 @@ set(${PROJECT_NAME}_MOC_SRCS
   QtDcmPreferencesWidget.cpp
   QtDcmPreferencesDialog.cpp
   QtDcmServer.cpp
-#  PluginAPHP/QtDcmAPHP.cpp
+  PluginAPHP/QtDcmFifoMover.cpp
   PluginAPHP/callbacks/QtDcmCallbacks.cpp
 )
 

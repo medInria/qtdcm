@@ -23,11 +23,12 @@
 
 #include <QtDcmMoveScu.h>
 #include "QtDcmInterface.h"
+#include "QtDcmFifoMover.h"
 
 class QtDcmAPHP : public QtDcmInterface
 {
 public:
-    QtDcmAPHP():m_port(-1){};
+    QtDcmAPHP();//:m_port(-1){};
     ~QtDcmAPHP();
 
     int sendEcho() override;
@@ -43,6 +44,10 @@ public slots:
 
     void updateLocalParameters(QString const &aet, QString const &hostname, int port) override;
     void updateRemoteParameters(QString const &aet, QString const &hostname, int port) override;
+    void sendPending(int requestId);
+
+signals:
+    void receivePending(const int requestId);
 private:
     static bool isServerAvailable(const QString &hostName, int port);
 
@@ -52,6 +57,8 @@ private:
 
     QMap<int, QtDcmMoveScu*> m_RequestIdMap;
     QTemporaryDir m_TemporaryDir;
+    QThread m_Thread;
+    QtDcmFifoMover *m_FifoMover;
 
     enum moveStatus {
         KO = -1,

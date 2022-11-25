@@ -11,6 +11,7 @@
 #include <dcmtk/dcmnet/dimse.h>
 #include <dcmtk/dcmnet/dfindscu.h>
 #include <QtDcmPreferences.h>
+#include <QtDcmMoveScu.h>
 
 class QtDcmInterface : public QObject
 {
@@ -39,8 +40,10 @@ public:
     virtual bool moveRequest(int pi_requestId, const QString &queryLevel, const QString &key) = 0;
 
     virtual bool isCachedDataPath(int requestId) = 0;
+
 signals:
     void moveProgress(int requestId, int status, QString path = "");
+//    void requestAddedToFifo(int requestId, QtDcmMoveScu *mover);
 
 public slots:
     virtual void stopMove(int requestId) = 0;
