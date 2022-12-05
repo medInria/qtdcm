@@ -228,7 +228,7 @@ bool QtDcmAPHP::moveRequest(int pi_requestId, const QString &queryLevel, const Q
 
     if (m_TemporaryDir.isValid())
     {
-        auto mover = new QtDcmMoveScu ( );
+        auto mover = new QtDcmMoveScu();
         QDir dir(m_TemporaryDir.path());
 
         mover->setOutputDir ( dir.path() );
@@ -240,15 +240,15 @@ bool QtDcmAPHP::moveRequest(int pi_requestId, const QString &queryLevel, const Q
 
         m_RequestIdMap[pi_requestId] = mover;
 
-        QObject::connect( mover, &QtDcmMoveScu::serieMoved, [=](const QString &path, const QString &serieUid, int number){
+        QObject::connect( mover, &QtDcmMoveScu::serieMoved, this, [=](const QString &path, const QString &serieUid, int number){
             emit moveProgress(pi_requestId, static_cast<int>(moveStatus::OK), path);
         });
 
-        QObject::connect( mover, &QtDcmMoveScu::moveInProgress, [=](const QString &message){
+        QObject::connect( mover, &QtDcmMoveScu::moveInProgress, this, [=](const QString &message){
             emit moveProgress(pi_requestId, static_cast<int>(moveStatus::PENDING));
         });
 
-        QObject::connect( mover, &QtDcmMoveScu::moveFailed, [=](const QString &reason){
+        QObject::connect( mover, &QtDcmMoveScu::moveFailed, this,  [=](const QString &reason){
             emit moveProgress(pi_requestId, static_cast<int>(moveStatus::KO));
         });
 

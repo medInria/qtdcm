@@ -19,7 +19,7 @@ void QtDcmFifoMover::processing()
     {
         if(m_RequestIdMap.isEmpty())
         {
-            sleep(1);
+            std::this_thread::sleep_for(std::chrono::seconds(1));
         }
         else
         {
@@ -27,13 +27,27 @@ void QtDcmFifoMover::processing()
             auto mover = m_RequestIdMap.take(key);
             mover->start();
 
-            while(mover->isRunning())
+            while(mover->isRunning() && m_MustRun)
             {
-                emit sendPending(key, 1);
-                sleep(1);
+                for (auto other : m_RequestIdMap.keys())
+                {
+                    emit sendPending(other, 1);
+                }
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+            }
+            if (mover->isRunning())
+            {
+                mover->quit();
+                mover->wait();
             }
             mover->deleteLater();
         }
+    }
+    for (auto mover : m_RequestIdMap)
+    {
+        mover->quit();
+        mover->wait();
+        mover->deleteLater();
     }
 }
 
