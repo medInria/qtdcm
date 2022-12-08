@@ -5,18 +5,18 @@
 #ifndef QTDCM_QTDCMINTERFACE_H
 #define QTDCM_QTDCMINTERFACE_H
 
-
-#include <QString>
 #include <QObject>
-#include <dcmtk/dcmnet/dimse.h>
-#include <dcmtk/dcmnet/dfindscu.h>
-#include <QtDcmPreferences.h>
-#include <QtDcmMoveScu.h>
+#include <QString>
+#include <dcmtk/dcmdata/dctagkey.h>
 
-class QtDcmInterface : public QObject
+#include <qtdcmExports.h>
+
+class QTDCM_EXPORT QtDcmInterface : public QObject
 {
     Q_OBJECT
 public:
+    static QtDcmInterface* createNewInstance();
+    virtual ~QtDcmInterface() = default;
 
     struct response
     {
@@ -52,9 +52,6 @@ public slots:
     virtual void updateRemoteParameters(QString const &aet, QString const &hostname, int port) = 0;
 
 protected:
-    T_ASC_Network *m_net{}; // network struct, contains DICOM upper layer FSM etc.
-    T_ASC_Parameters *m_params{}; // parameters of association request
-    T_ASC_Association *m_assoc{};
 
 };
 

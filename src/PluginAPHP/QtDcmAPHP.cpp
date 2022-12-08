@@ -26,6 +26,7 @@
 #include <memory>
 #include <PluginAPHP/callbacks/QtDcmCallbacks.h>
 #include <QtDcmManager.h>
+#include <QtDcmPreferences.h>
 
 QtDcmAPHP::QtDcmAPHP():m_port(-1)
 {

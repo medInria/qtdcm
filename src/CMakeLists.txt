@@ -38,6 +38,7 @@ set(${PROJECT_NAME}_HDRS
 )
 
 set(${PROJECT_NAME}_SRCS
+  PluginAPHP/QtDcmInterface.cpp
   QtDcmFindCallback.cpp
   PluginAPHP/QtDcmAPHP.cpp
   PluginAPHP/QtDcmFifoMover.cpp
