@@ -21,6 +21,10 @@
 #ifndef QTDCM_QTDCMAPHP_H
 #define QTDCM_QTDCMAPHP_H
 
+#include <dcmtk/dcmnet/dimse.h>
+#include <dcmtk/dcmnet/dfindscu.h>
+
+#include <QtDcmServer.h>
 #include <QtDcmMoveScu.h>
 #include "QtDcmInterface.h"
 #include "QtDcmFifoMover.h"
@@ -54,6 +58,9 @@ private:
     void dcmtkPerformQuery(std::list<std::string> &keys, DcmFindSCUCallback &cb) const;
 
 private:
+    T_ASC_Network *m_net{}; // network struct, contains DICOM upper layer FSM etc.
+    T_ASC_Parameters *m_params{}; // parameters of association request
+    T_ASC_Association *m_assoc{};
 
     QMap<int, QtDcmMoveScu*> m_RequestIdMap;
     QTemporaryDir m_TemporaryDir;
