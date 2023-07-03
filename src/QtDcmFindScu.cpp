@@ -237,12 +237,23 @@ bool QtDcmFindScu::doQuery ( const OFList<OFString>& overrideKeys, QtDcmFindCall
     }
 
     QtDcmFindCallback callback( level );
-    OFCondition cond = findscu.performQuery ( d->manager->currentPacs().address().toUtf8().data(),
-                                d->manager->currentPacs().port().toInt(),
-                                QtDcmPreferences::instance()->aetitle().toUtf8().data(),
-                                d->manager->currentPacs().aetitle().toUtf8().data(),
-                                queryRetrieveInfoModel.toStdString().c_str() , EXS_Unknown,
-                                DIMSE_BLOCKING, 0, ASC_DEFAULTMAXPDU, false, false, 1, FEM_none, -1, &keys, &callback, &fileNameList );
+    OFCondition cond = findscu.performQuery(d->manager->currentPacs().address().toUtf8().data(),
+                                            d->manager->currentPacs().port().toInt(),
+                                            QtDcmPreferences::instance()->aetitle().toUtf8().data(),
+                                            d->manager->currentPacs().aetitle().toUtf8().data(),
+                                            queryRetrieveInfoModel.toStdString().c_str(),
+                                            EXS_Unknown,
+                                            DIMSE_BLOCKING,
+                                            0,
+                                            ASC_DEFAULTMAXPDU,
+                                            false,
+                                            false,
+                                            1,
+                                            DcmFindSCUExtractMode::FEM_none,
+                                            -1,
+                                            &keys,
+                                            &callback,
+                                            &fileNameList );
     if (cond.bad())
     {
         QString message = "Cannot perform query C-FIND : " + QString(cond.text());

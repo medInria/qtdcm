@@ -57,16 +57,6 @@
 
 #include <QtDcmManager.h>
 
-namespace {
-  QString dateToString(const QDate & date) {
-      if (date == QDate()) {
-          return "*";
-      }
-      return date.toString("yyyyMMdd");
-  }
-  
-}
-
 class QtDcmManagerPrivate
 {
 
