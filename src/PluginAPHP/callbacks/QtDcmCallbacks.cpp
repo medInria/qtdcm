@@ -27,7 +27,7 @@ FindCallback::FindCallback(QMap<DcmTagKey, QString> tags)
     m_tags = tags;
 }
 
-void FindCallback::callback (T_DIMSE_C_FindRQ *request, int responseCount, T_DIMSE_C_FindRSP *rsp, DcmDataset *responseIdentifiers )
+void FindCallback::callback (T_DIMSE_C_FindRQ *request, int &responseCount, T_DIMSE_C_FindRSP *rsp, DcmDataset *responseIdentifiers )
 {
     Q_UNUSED(request)
     Q_UNUSED(responseCount)

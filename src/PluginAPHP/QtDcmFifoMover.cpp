@@ -1,5 +1,6 @@
 #include "QtDcmFifoMover.h"
 #include <QObject>
+#include <thread>
 
 QtDcmFifoMover::QtDcmFifoMover():  QObject()
 {

@@ -30,8 +30,8 @@ class FindCallback : public QObject, public DcmFindSCUCallback
 public:
     FindCallback(){};
     FindCallback(QMap<DcmTagKey, QString> tags);
-    void callback ( T_DIMSE_C_FindRQ *request, int responseCount, T_DIMSE_C_FindRSP *rsp, DcmDataset *responseIdentifiers ) override;
-
+    void callback ( T_DIMSE_C_FindRQ *request, int &responseCount, T_DIMSE_C_FindRSP *rsp, DcmDataset *responseIdentifiers) override;
+    
 public:
     QList<QMap<DcmTagKey, QString>> m_List;
     QMap<DcmTagKey, QString> m_tags;

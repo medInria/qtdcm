@@ -54,7 +54,7 @@ QtDcmFindCallback::~QtDcmFindCallback()
     d = NULL;
 }
 
-void QtDcmFindCallback::callback ( T_DIMSE_C_FindRQ *request, int responseCount, T_DIMSE_C_FindRSP *rsp, DcmDataset *responseIdentifiers )
+void QtDcmFindCallback::callback ( T_DIMSE_C_FindRQ *request, int &responseCount, T_DIMSE_C_FindRSP *rsp, DcmDataset *responseIdentifiers )
 {
     Q_UNUSED(request)
     Q_UNUSED(responseCount)

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0.2)
 
-project(QTDCM VERSION "2.1.2")
+project(QTDCM LANGUAGES CXX VERSION "2.1.2")
 
 option(BUILD_EXAMPLE       "Build qtdcm example application" OFF)
 option(BUILD_DOCUMENTATION "Build QtDcm Documentation (add a Documentation target)" OFF)

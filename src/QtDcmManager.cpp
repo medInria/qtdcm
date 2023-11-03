@@ -386,7 +386,7 @@ void QtDcmManager::loadDicomdir()
 
     //Load dicomdir in a DCMTK DicomFileFormat object
     OFCondition status;
-    OFFilename dcmFileName(d->dicomdir.toStdString(), OFTrue);
+    OFFilename dcmFileName(d->dicomdir.toStdString().c_str(), OFTrue);
     if ( ! ( status = d->dfile.loadFile (dcmFileName) ).good() ) {
         return;
     }
@@ -842,7 +842,7 @@ void QtDcmManager::makePreview ( const QString &filename )
 {
     DcmRLEDecoderRegistration::registerCodecs ( OFFalse, OFFalse );
     DJDecoderRegistration::registerCodecs ( EDC_photometricInterpretation, EUC_default, EPC_default, OFFalse );
-    OFFilename dcmFileName(filename.toStdString(), OFTrue);
+    OFFilename dcmFileName(filename.toStdString().c_str(), OFTrue);
     DcmFileFormat file;
     file.loadFile (dcmFileName);
     DcmDataset * dset = file.getDataset();
@@ -929,7 +929,7 @@ void QtDcmManager::setDicomdir ( const QString &dicomdir )
     d->dicomdir = dicomdir;
     //Load dicomdir in a DCMTK DicomFileFormat object
     OFCondition status;
-    OFFilename dcmFileName(d->dicomdir.toStdString(), OFTrue);
+    OFFilename dcmFileName(d->dicomdir.toStdString().c_str(), OFTrue);
     if ( ! ( status = d->dfile.loadFile (dcmFileName) ).good() ) {
         return;
     }

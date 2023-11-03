@@ -55,7 +55,7 @@ signals:
 private:
     static bool isServerAvailable(const QString &hostName, int port);
 
-    void dcmtkPerformQuery(std::list<std::string> &keys, DcmFindSCUCallback &cb) const;
+    void dcmtkPerformQuery(OFList<OFString>  &keys, DcmFindSCUCallback &cb) const;
 
 private:
     T_ASC_Network *m_net{}; // network struct, contains DICOM upper layer FSM etc.

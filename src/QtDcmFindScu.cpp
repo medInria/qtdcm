@@ -242,7 +242,7 @@ bool QtDcmFindScu::doQuery ( const OFList<OFString>& overrideKeys, QtDcmFindCall
                                 QtDcmPreferences::instance()->aetitle().toUtf8().data(),
                                 d->manager->currentPacs().aetitle().toUtf8().data(),
                                 queryRetrieveInfoModel.toStdString().c_str() , EXS_Unknown,
-                                DIMSE_BLOCKING, 0, ASC_DEFAULTMAXPDU, false, false, 1, true, -1, &keys, &callback, &fileNameList );
+                                DIMSE_BLOCKING, 0, ASC_DEFAULTMAXPDU, false, false, 1, FEM_none, -1, &keys, &callback, &fileNameList );
     if (cond.bad())
     {
         QString message = "Cannot perform query C-FIND : " + QString(cond.text());

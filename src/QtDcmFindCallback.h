@@ -46,7 +46,7 @@ public:
         IMAGE
     };
 
-    virtual void callback ( T_DIMSE_C_FindRQ *request, int responseCount, T_DIMSE_C_FindRSP *rsp, DcmDataset *responseIdentifiers );
+    virtual void callback ( T_DIMSE_C_FindRQ *request, int &responseCount, T_DIMSE_C_FindRSP *rsp, DcmDataset *responseIdentifiers );
 
 private:
     QtDcmFindCallbackPrivate * d;

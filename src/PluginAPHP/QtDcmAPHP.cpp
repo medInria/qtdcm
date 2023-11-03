@@ -151,10 +151,10 @@ int QtDcmAPHP::sendEcho()
 QList<QMap<DcmTagKey, QString>> QtDcmAPHP::cFind(const QMap<DcmTagKey, QString> &filters)
 {
     OFList<OFString> keys;
-
     for (DcmTagKey key : filters.keys())
     {
-        keys.emplace_back(QString(key.toString().c_str() + QString("=") + filters.value(key)).toUtf8().data());
+        keys.push_back(QString(key.toString().c_str() + QString("=") + filters.value(key)).toUtf8().data());
+        // keys.emplace_back(QString(key.toString().c_str() + QString("=") + filters.value(key)).toUtf8().data());
     }
 
     FindCallback cb(filters);
@@ -164,7 +164,7 @@ QList<QMap<DcmTagKey, QString>> QtDcmAPHP::cFind(const QMap<DcmTagKey, QString> 
     return cb.m_List;
 }
 
-void QtDcmAPHP::dcmtkPerformQuery(std::list<std::string> &keys, DcmFindSCUCallback &cb) const
+void QtDcmAPHP::dcmtkPerformQuery(OFList<OFString>  &keys, DcmFindSCUCallback &cb) const
 {
     //Image level
     OFList<OFString> fileNameList;
@@ -176,7 +176,6 @@ void QtDcmAPHP::dcmtkPerformQuery(std::list<std::string> &keys, DcmFindSCUCallba
         {
 
             QString queryInfoModel = UID_FINDPatientRootQueryRetrieveInformationModel;
-
             OFCondition cond = findscu.performQuery (m_remoteServer.address().toUtf8().data(),
                                                      m_remoteServer.port().toInt(),
                                                      m_aetitle.toUtf8().data(),
@@ -185,7 +184,7 @@ void QtDcmAPHP::dcmtkPerformQuery(std::list<std::string> &keys, DcmFindSCUCallba
                                                      EXS_Unknown, DIMSE_BLOCKING,
                                                      0, ASC_DEFAULTMAXPDU,
                                                      false, false,
-                                                     1, false, -1, &keys,
+                                                     1, FEM_none, -1, &keys,
                                                      &cb, &fileNameList );
 
             if (cond.good())

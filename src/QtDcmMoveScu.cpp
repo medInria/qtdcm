@@ -398,8 +398,9 @@ void QtDcmMoveScu::addOverrideKey ( const QString & key )
         const DcmDataDictionary& globalDataDict = dcmDataDict.rdlock();
         const DcmDictEntry *dicent = globalDataDict.findEntry ( dicName.c_str() );
 
-        dcmDataDict.unlock();
-
+        // dcmDataDict.unlock();
+        dcmDataDict.rdunlock();
+        dcmDataDict.wrunlock();
         if ( dicent != NULL ) {
             // found dictionary name, copy group and element number
             key = dicent->getKey();
@@ -761,7 +762,8 @@ void QtDcmMoveScu::storeSCPCallback ( void *callbackData, T_DIMSE_StoreProgress 
 
     DIC_UI sopClass;
     DIC_UI sopInstance;
-    
+    size_t sopClassSize;
+    size_t sopInstanceSize;
     if ( progress->state == DIMSE_StoreEnd ) {
 
         *statusDetail = NULL;
@@ -786,7 +788,7 @@ void QtDcmMoveScu::storeSCPCallback ( void *callbackData, T_DIMSE_StoreProgress 
 
             if ( ( rsp->DimseStatus == STATUS_Success ) && !self->d->ignore ) {
                 /* which SOP class and SOP instance ? */
-                if ( !DU_findSOPClassAndInstanceInDataSet ( *imageDataSet, sopClass, sopInstance, self->d->correctUIDPadding ) ) {
+                if ( !DU_findSOPClassAndInstanceInDataSet ( *imageDataSet, sopClass, sopClassSize, sopInstance, sopInstanceSize, self->d->correctUIDPadding ) ) {
                     rsp->DimseStatus = STATUS_STORE_Error_CannotUnderstand;
                 }
                 else if ( strcmp ( sopClass, req->AffectedSOPClassUID ) != 0 ) {
@@ -918,6 +920,7 @@ OFCondition QtDcmMoveScu::moveSCU ( T_ASC_Association * assoc, const char *fname
     DcmDataset          *rspIds = NULL;
     const char          *sopClass;
     DcmDataset          *statusDetail = NULL;
+    size_t               callingAPTitleSize;
 
     QuerySyntax querySyntax[3] =
     {
@@ -959,8 +962,8 @@ OFCondition QtDcmMoveScu::moveSCU ( T_ASC_Association * assoc, const char *fname
 
     if ( d->moveDestination == NULL ) {
         /* set the destination to be me */
-        ASC_getAPTitles ( assoc->params, req.MoveDestination,
-                          NULL, NULL );
+        ASC_getAPTitles ( assoc->params, req.MoveDestination, callingAPTitleSize,
+                          NULL, NULL, NULL, NULL);
     }
     else {
         strcpy( req.MoveDestination, d->moveDestination );
