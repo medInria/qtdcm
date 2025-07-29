@@ -84,13 +84,6 @@ foreach(lib
 
 endforeach()
 
-# foreach(libname TIFF ZLIB LIBICONV JPEG)
-#   find_package(${libname} REQUIRED)
-#   foreach(lib ${${libname}_LIBRARIES})
-#     list(APPEND DCMTK_LIBRARIES ${lib})
-#   endforeach()
-# endforeach()
-
 set(DCMTK_config_TEST_HEADER osconfig.h)
 set(DCMTK_dcmdata_TEST_HEADER dctypes.h)
 set(DCMTK_dcmimage_TEST_HEADER dicoimg.h)
@@ -124,13 +117,12 @@ foreach(dir
   find_path(DCMTK_${dir}_INCLUDE_DIR
     ${DCMTK_${dir}_TEST_HEADER}
     PATHS
+    ${DCMTK_ROOT}/${dir}/include/dcmtk/${dir}
+    ${DCMTK_SOURCE_DIR}/${dir}/include
+    ${DCMTK_SOURCE_DIR}/${dir}
+    ${DCMTK_SOURCE_DIR}/include/${dir}
+    ${DCMTK_SOURCE_DIR}/include/dcmtk/${dir}
     ${DCMTK_SOURCE_DIR}/${dir}/include/dcmtk/${dir}
-    ${DCMTK_DIR}/${dir}/include
-    ${DCMTK_DIR}/${dir}
-    ${DCMTK_DIR}/include/${dir}
-    ${DCMTK_DIR}/include/dcmtk/${dir}
-    ${DCMTK_DIR}/${dir}/include/dcmtk/${dir}
-
     )
   mark_as_advanced(DCMTK_${dir}_INCLUDE_DIR)
 
@@ -151,7 +143,6 @@ foreach(dir
   endif()
 endforeach()
 
-
 if(WIN32)
   list(APPEND DCMTK_LIBRARIES netapi32 wsock32)
 endif()
@@ -168,8 +159,11 @@ endif()
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(DCMTK DEFAULT_MSG
   DCMTK_config_INCLUDE_DIR
+  DCMTK_ofstd_INCLUDE_DIR
   DCMTK_ofstd_LIBRARY
+  DCMTK_dcmdata_INCLUDE_DIR
   DCMTK_dcmdata_LIBRARY
+  DCMTK_dcmimgle_INCLUDE_DIR
   DCMTK_dcmimgle_LIBRARY)
 
 # Compatibility: This variable is deprecated
