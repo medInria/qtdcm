@@ -10,11 +10,6 @@ get_filename_component(QT5_BINARY_DIR ${QT5_QMAKE_EXECUTABLE} PATH)
 find_package(DCMTK REQUIRED ${DCMTK_FIND_PACKAGE_STATEGY})
 include_directories(${DCMTK_INCLUDE_DIRS})
 
-if(APPLE AND NOT DCMTK_FIND_PACKAGE_USE_CONFIG_ONLY)
-  include(FixDCMTKMacInstall)
-  FixDCMTKMacInstall()
-endif()
-
 find_package(ITK REQUIRED)
 if(ITK_FOUND)
   include(${ITK_USE_FILE})
@@ -125,7 +120,14 @@ set(${PROJECT_NAME}_LIBRARIES
   Qt5::Core
   Qt5::Widgets
   Qt5::Network
-  ${DCMTK_LIBRARIES}
+  DCMTK::ofstd
+  DCMTK::dcmdata
+  DCMTK::dcmnet
+  DCMTK::dcmimgle
+  DCMTK::dcmimage
+  DCMTK::dcmjpeg
+  DCMTK::dcmjpls
+  DCMTK::dcmiod
   ITKIOImageBase
   ITKCommon
   ITKIOBMP
