@@ -3,9 +3,9 @@
 #  DCMTK_INCLUDE_DIRS   - Directories to include to use DCMTK
 #  DCMTK_LIBRARIES     - Files to link against to use DCMTK
 #  DCMTK_FOUND         - If false, don't try to use DCMTK
-#  DCMTK_DIR           - (optional) Source directory for DCMTK
+#  DCMTK_ROOT           - (optional) Source directory for DCMTK
 #
-# DCMTK_DIR can be used to make it simpler to find the various include
+# DCMTK_ROOT can be used to make it simpler to find the various include
 # directories and compiled libraries if you've just compiled it in the
 # source tree. Just set it to the root of the tree where you extracted
 # the source (default to /usr/include/dcmtk/)
@@ -31,13 +31,13 @@
 # Modified for EasyViz by Thomas Sondergaard.
 #
 
-if(NOT DCMTK_FOUND AND NOT DCMTK_DIR)
-  set(DCMTK_DIR
+if(NOT DCMTK_FOUND AND NOT DCMTK_ROOT)
+  set(DCMTK_ROOT
     "/usr"
     CACHE
     PATH
     "Root of DCMTK source or installation tree")
-  mark_as_advanced(DCMTK_DIR)
+  mark_as_advanced(DCMTK_ROOT)
 endif()
 
 if(NOT DCMTK_SOURCE_DIR)
@@ -69,12 +69,12 @@ foreach(lib
   find_library(DCMTK_${lib}_LIBRARY
     ${lib}
     PATHS
-    ${DCMTK_DIR}/${lib}/libsrc
-    ${DCMTK_DIR}/${lib}/libsrc/Release
-    ${DCMTK_DIR}/${lib}/libsrc/Debug
-    ${DCMTK_DIR}/${lib}/Release
-    ${DCMTK_DIR}/${lib}/Debug
-    ${DCMTK_DIR}/lib)
+    ${DCMTK_ROOT}/${lib}/libsrc
+    ${DCMTK_ROOT}/${lib}/libsrc/Release
+    ${DCMTK_ROOT}/${lib}/libsrc/Debug
+    ${DCMTK_ROOT}/${lib}/Release
+    ${DCMTK_ROOT}/${lib}/Debug
+    ${DCMTK_ROOT}/lib)
 
   mark_as_advanced(DCMTK_${lib}_LIBRARY)
 
@@ -171,6 +171,6 @@ set(DCMTK_INCLUDE_DIR ${DCMTK_INCLUDE_DIRS})
 
 foreach(executable dcmdump dcmdjpeg dcmdrle)
   string(TOUPPER ${executable} EXECUTABLE)
-  find_program(DCMTK_${EXECUTABLE}_EXECUTABLE ${executable} ${DCMTK_DIR}/bin)
+  find_program(DCMTK_${EXECUTABLE}_EXECUTABLE ${executable} ${DCMTK_ROOT}/bin)
   mark_as_advanced(DCMTK_${EXECUTABLE}_EXECUTABLE)
 endforeach()

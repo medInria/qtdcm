@@ -52,8 +52,8 @@
  * 
  * Set the following CMake options values:
  * <div id="code">
- * ITK_DIR : /path/to/your/itk/build/directory<br>
- * DCMTK_DIR : /path/to/your/dcmtk/build/directory<br>
+ * ITK_ROOT : /path/to/your/itk/build/directory<br>
+ * DCMTK_ROOT : /path/to/your/dcmtk/build/directory<br>
  * DCMTK_SOURCE_DIR : /path/to/your/dcmtk/source/directory<br>
  * CMAKE_BUILD_TYPE : RelWithDebInfo<br>
  * </div>
