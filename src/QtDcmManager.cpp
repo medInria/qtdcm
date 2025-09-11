@@ -807,8 +807,12 @@ void QtDcmManager::deleteTemporaryDirs()
 
 void QtDcmManager::generateCurrentSerieDir()
 {
-    if ( !d->serieId.isEmpty() ) {
-        d->currentSerieDir = d->tempDir.absolutePath() + QDir::separator() + d->serieId;
+    if ( !d->serieId.isEmpty() )
+    {
+        QString newPath = d->tempDir.absolutePath()
+                + QDir::separator()
+                + d->serieId;
+        d->currentSerieDir.setPath(newPath);
         d->tempDir.mkdir ( d->serieId );
     }
 }
