@@ -18,8 +18,8 @@ endif()
 ExternalProject_Add(
   dcmtk 
  
-  GIT_REPOSITORY git://git.dcmtk.org/dcmtk.git
-  GIT_TAG DCMTK-3.6.2
+  GIT_REPOSITORY git@github.com:DCMTK/dcmtk.git
+  GIT_TAG DCMTK-3.6.9
 
   CMAKE_GENERATOR Ninja
   
