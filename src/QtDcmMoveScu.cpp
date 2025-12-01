@@ -761,8 +761,6 @@ void QtDcmMoveScu::storeSCPCallback ( void *callbackData, T_DIMSE_StoreProgress 
 
     DIC_UI sopClass;
     DIC_UI sopInstance;
-    size_t sopClassSize;
-    size_t sopInstanceSize;
     if ( progress->state == DIMSE_StoreEnd ) {
 
         *statusDetail = NULL;
@@ -923,7 +921,6 @@ OFCondition QtDcmMoveScu::moveSCU ( T_ASC_Association * assoc, const char *fname
     DcmDataset          *rspIds = NULL;
     const char          *sopClass;
     DcmDataset          *statusDetail = NULL;
-    size_t               callingAPTitleSize;
 
     QuerySyntax querySyntax[3] =
     {
