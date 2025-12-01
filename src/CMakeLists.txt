@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.19)
 
 project(qtdcm)
 
@@ -125,7 +125,6 @@ set(${PROJECT_NAME}_LIBRARIES
   Qt5::Core
   Qt5::Widgets
   Qt5::Network
-  ${DCMTK_LIBRARIES}
   ITKIOImageBase
   ITKCommon
   ITKIOBMP

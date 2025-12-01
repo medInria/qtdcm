@@ -168,11 +168,8 @@ endif()
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(DCMTK DEFAULT_MSG
   DCMTK_config_INCLUDE_DIR
-  DCMTK_ofstd_INCLUDE_DIR
   DCMTK_ofstd_LIBRARY
-  DCMTK_dcmdata_INCLUDE_DIR
   DCMTK_dcmdata_LIBRARY
-  DCMTK_dcmimgle_INCLUDE_DIR
   DCMTK_dcmimgle_LIBRARY)
 
 # Compatibility: This variable is deprecated
