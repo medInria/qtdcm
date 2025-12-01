@@ -419,11 +419,11 @@ void QtDcmManager::findImagesDicomdir ( const QString &uid )
 
 void QtDcmManager::moveSelectedSeries()
 {
-    if ( !d->tempDir.exists() ) {
+    if ( !d->tempDir.exists() || d->dataToImport.count()==0 )
+    {
         return;
     }
 
-    // Uhh
     qApp->processEvents();
 
     switch (d->mode) {
@@ -779,7 +779,7 @@ void QtDcmManager::updateProgressBar ( int i )
 
 void QtDcmManager::createTemporaryDirs()
 {
-    //Creation d'un répertoire temporaire pour la série
+    //Create a temporary directory for the series
     QDir tempDir = QDir ( QDir::tempPath() );
 
     //Use Quuid to generate the temporary directory
@@ -815,16 +815,17 @@ void QtDcmManager::generateCurrentSerieDir()
 
 void QtDcmManager::deleteCurrentSerieDir()
 {
-    // Suppression des fichiers temporaires
+    // Remove temporary files
     const QStringList listFiles = d->currentSerieDir.entryList ( QDir::Files, QDir::Name );
 
     for ( int i = 0; i < listFiles.size(); i++ ) {
         d->currentSerieDir.remove ( listFiles.at ( i ) );
     }
 
-    // Suppression du répertoire temporaire
-    if ( !d->tempDir.rmdir ( d->serieId ) ) {
-        qDebug() << tr ( "Probleme lors de la suppression du répertoire temporaire" );
+    // Remove temporary repertory
+    if ( !d->tempDir.rmdir ( d->serieId ) )
+    {
+        qDebug() << tr ( "Error removing temporary directory" );
     }
 }
 
