@@ -21,7 +21,7 @@ before_install:
 
 install:
     - mkdir build && cd build
-    - cmake -D CONFIGURE_EXTERNALS=1 -D DCMTK_DIR=$HOME/externals/dcmtk-build -D DCMTK_SOURCE_DIR=$HOME/externals/dcmtk -D ITK_DIR=$HOME/externals/itk-build ..
+    - cmake -D CONFIGURE_EXTERNALS=1 -D DCMTK_ROOT=$HOME/externals/dcmtk-build -D DCMTK_SOURCE_DIR=$HOME/externals/dcmtk -D ITK_ROOT=$HOME/externals/itk-build ..
     - make
 
 script:

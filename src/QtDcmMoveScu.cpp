@@ -245,7 +245,7 @@ OFCondition QtDcmMoveScu::move ( const QString & uid )
         return cond;
     }
 
-    cond = ASC_createAssociationParameters ( &d->params, d->maxPDU );
+    cond = ASC_createAssociationParameters(&d->params, d->maxPDU, OFFalse);
 
     if ( cond.bad() ) {
         qDebug() << "Cannot create association: " << DimseCondition::dump ( temp_str, cond ).c_str();
@@ -419,20 +419,31 @@ void QtDcmMoveScu::addOverrideKey ( const QString & key )
     }
 
     DcmTag tag ( g, e );
-    if ( tag.error() != EC_Normal ) {
-        sprintf ( msg2, "unknown tag: (%04x,%04x)", g, e );
+    if ( tag.error() != EC_Normal )
+    {
+        std::snprintf(msg2, sizeof(msg2),
+              "unknown tag: (%04x,%04x)",
+              static_cast<unsigned int>(g),
+              static_cast<unsigned int>(e));
         qDebug() << QString ( msg2 );
     }
 
     DcmElement *elem = DcmDataset::newDicomElement ( tag );
-    if ( elem == NULL ) {
-        sprintf ( msg2, "cannot create element for tag: (%04x,%04x)", g, e );
+    if ( elem == nullptr )
+    {
+        std::snprintf(msg2, sizeof(msg2),
+              "cannot create element for tag: (%04x,%04x)",
+              static_cast<unsigned int>(g),
+              static_cast<unsigned int>(e));
         qDebug() << QString ( msg2 );
     }
 
     if ( valStr.length() > 0 ) {
         if ( elem->putString ( valStr.c_str() ).bad() ) {
-            sprintf ( msg2, "cannot put tag value: (%04x,%04x)=\"", g, e );
+            std::snprintf(msg2, sizeof(msg2),
+              "cannot put tag value: (%04x,%04x)=\"",
+              static_cast<unsigned int>(g),
+              static_cast<unsigned int>(e));
             msg = msg2;
             msg += valStr;
             msg += "\"";
@@ -440,8 +451,12 @@ void QtDcmMoveScu::addOverrideKey ( const QString & key )
         }
     }
 
-    if ( d->overrideKeys.insert ( elem, OFTrue ).bad() ) {
-        sprintf ( msg2, "cannot insert tag: (%04x,%04x)", g, e );
+    if ( d->overrideKeys.insert ( elem, OFTrue ).bad() )
+    {
+        std::snprintf(msg2, sizeof(msg2),
+              "cannot insert tag: (%04x,%04x)",
+              static_cast<unsigned int>(g),
+              static_cast<unsigned int>(e));
         qDebug() << QString ( msg2 );
     }
 }
@@ -723,9 +738,10 @@ OFCondition QtDcmMoveScu::storeSCP ( T_ASC_Association *assoc, T_DIMSE_Message *
 
     req = &msg->msg.CStoreRQ;
 
-    sprintf ( imageFile, "%s.%s",
-                dcmSOPClassUIDToModality ( req->AffectedSOPClassUID ),
-                req->AffectedSOPInstanceUID );
+    std::snprintf(imageFile, sizeof(imageFile),
+              "%s.%s",
+              dcmSOPClassUIDToModality(req->AffectedSOPClassUID),
+              req->AffectedSOPInstanceUID);
 
     self->d->assoc = assoc;
 

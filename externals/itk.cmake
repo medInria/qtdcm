@@ -15,11 +15,11 @@ else()
   mark_as_advanced(GIT_BIN)
 endif()
 
-if("${ITK_DIR}" STREQUAL "")
-  set(ITK_DIR ${PROJECT_BINARY_DIR}/externals/itk-build)
+if("${ITK_ROOT}" STREQUAL "")
+  set(ITK_ROOT ${PROJECT_BINARY_DIR}/externals/itk-build)
 endif()
 
-set(ITK_DIR "${ITK_DIR}" CACHE PATH "" FORCE)
+set(ITK_ROOT "${ITK_ROOT}" CACHE PATH "" FORCE)
 
 set(git_url https://github.com/InsightSoftwareConsortium/ITK.git)
 set(git_tag v5.0.0)
@@ -32,7 +32,7 @@ ExternalProject_Add(
 
   CMAKE_GENERATOR Ninja
   
-  BINARY_DIR "${ITK_DIR}"
+  BINARY_DIR "${ITK_ROOT}"
   CMAKE_ARGS -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_EXAMPLES:BOOL=OFF -DBUILD_TESTING:BOOL=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo 
   
   INSTALL_COMMAND ""

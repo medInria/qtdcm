@@ -249,7 +249,7 @@ void QtDcmServersDicomSettingsWidget::sendEcho()
     
     T_ASC_Parameters *params; // parameters of association request
 
-    cond = ASC_createAssociationParameters ( &params, ASC_DEFAULTMAXPDU );
+    cond = ASC_createAssociationParameters(&params, ASC_DEFAULTMAXPDU, OFFalse);
 
     // set calling and called AE titles
     cond = ASC_setAPTitles ( params, aet.toUtf8().data(), serverAet.toUtf8().data(), NULL );
